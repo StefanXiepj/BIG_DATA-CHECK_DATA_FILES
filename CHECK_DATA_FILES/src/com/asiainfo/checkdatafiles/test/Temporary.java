@@ -1,29 +1,6 @@
 package com.asiainfo.checkdatafiles.test;
 
-public class Temporary {
 
-}
-
-
-package com.asiabi.report.action;
-
-import com.asiabi.base.table.PubInfoConditionTable;
-import com.asiabi.base.util.CommConditionUtil;
-import com.asiabi.base.util.StringTool;
-import com.asiabi.common.app.AppException;
-import com.asiabi.common.app.ReflectUtil;
-import com.asiabi.report.domain.RptColDictTable;
-import com.asiabi.report.domain.RptFilterTable;
-import com.asiabi.report.domain.RptResourceTable;
-import com.asiabi.report.service.ILReportService;
-import com.asiabi.report.service.ILTableService;
-import com.asiabi.report.service.impl.LReportServiceImpl;
-import com.asiabi.report.service.impl.LTableServiceImpl;
-import com.asiabi.report.struct.ReportQryStruct;
-import com.asiainfo.common.LoadProperties;
-import com.asiainfo.db.SQLCommand;
-import com.asiainfo.mail.action.FtpServer;
-import com.asiainfo.xj.util.DBUtil;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -34,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.net.ftp.FTPClient;
+
 
 public class TermlSaleEmailData
 {
