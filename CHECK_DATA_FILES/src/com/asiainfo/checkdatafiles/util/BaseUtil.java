@@ -44,7 +44,7 @@ public class BaseUtil {
 	}
 
 	// 校验邮箱
-	public static boolean checkEmail(String email) {
+	public static boolean isEmail(String email) {
 		boolean flag = false;
 		try {
 			String check = "^([a-z0-9A-Z]+[-|_|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
@@ -57,6 +57,73 @@ public class BaseUtil {
 		return flag;
 	}
 
+
+
+	// 校验手机号码
+	public static boolean isMobile(String str) {
+		Pattern p = null;
+		Matcher m = null;
+		boolean b = false;
+		p = Pattern.compile("^[1][3,4,5,8][0-9]{9}$"); // 验证手机号
+		m = p.matcher(str);
+		b = m.matches();
+		return b;
+	}
+
+	// 校验电话号码
+	public static boolean isPhone(String str) {
+		Pattern p1 = null, p2 = null;
+		Matcher m = null;
+		boolean b = false;
+		p1 = Pattern.compile("^[0][1-9]{2,3}-[0-9]{5,10}$"); // 验证带区号的
+		p2 = Pattern.compile("^[1-9]{1}[0-9]{5,8}$"); // 验证没有区号的
+		if (str.length() > 9) {
+			m = p1.matcher(str);
+			b = m.matches();
+		} else {
+			m = p2.matcher(str);
+			b = m.matches();
+		}
+		return b;
+	}
+
+	// 校验日期格式
+	public static boolean isDateTimeWithLongFormat(String timeStr) {
+		String format = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01]) "
+				+ "([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]";
+		Pattern pattern = Pattern.compile(format);
+		Matcher matcher = pattern.matcher(timeStr);
+		if (matcher.matches()) {
+			pattern = Pattern.compile("(\\d{4})-(\\d+)-(\\d+).*");
+			matcher = pattern.matcher(timeStr);
+			if (matcher.matches()) {
+				int y = Integer.valueOf(matcher.group(1));
+				int m = Integer.valueOf(matcher.group(2));
+				int d = Integer.valueOf(matcher.group(3));
+				if (d > 28) {
+					Calendar c = Calendar.getInstance();
+					c.set(y, m - 1, 1);
+					int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+					return (lastDay >= d);
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// 数字格式校验
+	public static boolean isNumber(String number) {
+
+		String regex = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
+		if (!number.matches(regex)) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+	
 	// 获取指定行
 	public static String readAppointedLineNumber(LineNumberReader reader, int selectLineNumber) {
 		try {
@@ -149,69 +216,6 @@ public class BaseUtil {
 		result.put("DATA", data);
 
 		return result;
-	}
-
-	// 校验手机号码
-	public static boolean isMobile(String str) {
-		Pattern p = null;
-		Matcher m = null;
-		boolean b = false;
-		p = Pattern.compile("^[1][3,4,5,8][0-9]{9}$"); // 验证手机号
-		m = p.matcher(str);
-		b = m.matches();
-		return b;
-	}
-
-	// 校验电话号码
-	public static boolean isPhone(String str) {
-		Pattern p1 = null, p2 = null;
-		Matcher m = null;
-		boolean b = false;
-		p1 = Pattern.compile("^[0][1-9]{2,3}-[0-9]{5,10}$"); // 验证带区号的
-		p2 = Pattern.compile("^[1-9]{1}[0-9]{5,8}$"); // 验证没有区号的
-		if (str.length() > 9) {
-			m = p1.matcher(str);
-			b = m.matches();
-		} else {
-			m = p2.matcher(str);
-			b = m.matches();
-		}
-		return b;
-	}
-
-	// 校验日期格式
-	public static boolean valiDateTimeWithLongFormat(String timeStr) {
-		String format = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01]) "
-				+ "([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]";
-		Pattern pattern = Pattern.compile(format);
-		Matcher matcher = pattern.matcher(timeStr);
-		if (matcher.matches()) {
-			pattern = Pattern.compile("(\\d{4})-(\\d+)-(\\d+).*");
-			matcher = pattern.matcher(timeStr);
-			if (matcher.matches()) {
-				int y = Integer.valueOf(matcher.group(1));
-				int m = Integer.valueOf(matcher.group(2));
-				int d = Integer.valueOf(matcher.group(3));
-				if (d > 28) {
-					Calendar c = Calendar.getInstance();
-					c.set(y, m - 1, 1);
-					int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-					return (lastDay >= d);
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
-	// 数字格式校验
-	public static boolean isNumber(String number) {
-
-		String regex = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
-		if (!number.matches(regex)) {
-			return false;
-		}
-		return true;
 	}
 
 }
