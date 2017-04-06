@@ -1,6 +1,17 @@
 # 检验员清单
 HANDLER=IsHeaderRow,IsStringHandler,IsNumberHandler,IsDateHandler,IsEmailHandler,IsMobileHandler
 # 仓信息接口
+WAREHOUSE={
+'':
+
+
+}
+# 店信息接口
+
+# 库存接口
+
+# 在途接口
+
 DEFAULT=IsStringHandler,200
 MEID=IsStringHandler,20
 PROV_CORP=IsStringHandler,10
