@@ -1,4 +1,4 @@
-package com.asiainfo.checkdatafiles.handler;
+package com.asiainfo.checkdatafiles.beltline;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -13,11 +13,14 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 
+import com.asiainfo.checkdatafiles.handler.BaseHandler;
+import com.asiainfo.checkdatafiles.handler.CheckNumberHandler;
+
 public class MappingHandler {
 
-	Logger logger = Logger.getLogger(CheckNumberHandler.class);
+	Logger logger = Logger.getLogger(MappingHandler.class);
 
-	static HashMap<String, String> fieldMapping = new LinkedHashMap<String, String>() ;
+	static HashMap<String, String> fieldMapping = new LinkedHashMap<String, String>();
 	static HashMap<String, BaseHandler> handlerMapping = new LinkedHashMap<String, BaseHandler>() ;
 	
 	// 校验者清单
@@ -27,7 +30,7 @@ public class MappingHandler {
 		Properties prop = new Properties();
 		// Map<String, String> parameters = new HashMap<String, String>();
 		try {
-			// 读取属性文件a.properties
+			// 读取属性文件 json
 			InputStream in = new BufferedInputStream(
 					new FileInputStream("D:\\workspaces\\CHECK_DATA_FILES\\conf\\field_mapping.properties"));
 			// 加载属性列表
@@ -35,7 +38,7 @@ public class MappingHandler {
 			Iterator<String> it = prop.stringPropertyNames().iterator();
 			HashMap<String, String> properties = new HashMap<String, String>();
 
-			while (it.hasNext()) {
+			while (it.hasNext()){
 				String key = it.next();
 				properties.put(key, prop.getProperty(key));
 			}

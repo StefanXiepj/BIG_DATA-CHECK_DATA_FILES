@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import com.asiainfo.checkdatafiles.handler.BaseHandler;
 import com.asiainfo.checkdatafiles.handler.CheckNumberHandler;
-import com.asiainfo.checkdatafiles.handler.MappingHandler;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 
 public class ExecuteMain {

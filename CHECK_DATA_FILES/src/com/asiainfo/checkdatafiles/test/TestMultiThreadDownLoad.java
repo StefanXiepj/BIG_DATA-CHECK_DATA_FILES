@@ -13,9 +13,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.asiainfo.checkdatafiles.beltline.ExecuteMain;
+import com.asiainfo.checkdatafiles.beltline.MappingHandler;
 import com.asiainfo.checkdatafiles.handler.BaseHandler;
-import com.asiainfo.checkdatafiles.handler.MappingHandler;
-import com.asiainfo.checkdatafiles.handler.MappingHandler;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 
 public class TestMultiThreadDownLoad {
