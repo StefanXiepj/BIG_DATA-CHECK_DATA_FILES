@@ -10,9 +10,13 @@ import com.asiainfo.checkdatafiles.handler.BaseHandler;
 import com.asiainfo.checkdatafiles.handler.CheckNumberHandler;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 
-public class ExecuteMain {
+public class Runner {
 
-	Logger logger = Logger.getLogger(CheckNumberHandler.class);
+	private Logger logger = Logger.getLogger(CheckNumberHandler.class);
+	
+	private String[] handlers;
+	
+	private 
 
 	public void execute(String[] filesURL) {
 		try {

@@ -12,7 +12,7 @@ import java.util.Stack;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.asiainfo.checkdatafiles.beltline.ExecuteMain;
+import com.asiainfo.checkdatafiles.beltline.Runner;
 import com.asiainfo.checkdatafiles.beltline.MappingHandler;
 import com.asiainfo.checkdatafiles.handler.BaseHandler;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
@@ -53,7 +53,7 @@ public class TestMultiThreadDownLoad {
 		//String[] urls = new String[]{"D:\\download\\123.txt"};
 		//String[] urls = new String[]{"D:\\download\\123.txt"};
 		//ExecuteMain exe = new ExecuteMain();
-		ExecuteMain exe = new ExecuteMain();
+		Runner exe = new Runner();
 		exe.execute(urls);
 		System.out.println(System.currentTimeMillis()-start);
 
