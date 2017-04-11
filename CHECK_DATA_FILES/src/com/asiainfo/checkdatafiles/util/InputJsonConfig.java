@@ -18,7 +18,7 @@ public class InputJsonConfig {
             Gson gson = new Gson();
             FileInputStream configIn = null;
             try {
-                    configIn = new FileInputStream("hdfs.conf.json");
+                    configIn = new FileInputStream("D:\\git\\CHECK_DATA_FILES\\conf\\json.json");
                     _instance = gson.fromJson(IOUtils.toString(configIn), InputJsonConfig.class);
             } catch (JsonSyntaxException e) {
                     e.printStackTrace();
