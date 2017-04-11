@@ -1,100 +1,123 @@
 package com.asiainfo.checkdatafiles.beltline;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.asiainfo.checkdatafiles.handler.BaseHandler;
 import com.asiainfo.checkdatafiles.handler.CheckNumberHandler;
+import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 public class Runner {
 
-	private Logger logger = Logger.getLogger(CheckNumberHandler.class);
-	
-	private String[] handlers;
-	
-	private 
+	//private Logger logger = Logger.getLogger(CheckNumberHandler.class);
+	private static List<String> INTERFACE_LIST;
+	private static String SRC_FILE_URL;
+	private static String ERROR_LOG_URL;
+	private static String ERROR_COLUMNS_TITLE;
+	private static Map<String,String> ERROR_CODE_MAP;
+	private static Map<String,FilePojo> filePojoMap = new HashMap<String, FilePojo>();
 
-	public void execute(String[] filesURL) {
+	
+	
+	
+	public void setINTERFACE_LIST(List<String> iNTERFACE_LIST) {
+		INTERFACE_LIST = iNTERFACE_LIST;
+	}
+
+
+	public void setSRC_FILE_URL(String sRC_FILE_URL) {
+		SRC_FILE_URL = sRC_FILE_URL;
+	}
+
+
+	public void setERROR_LOG_URL(String eRROR_LOG_URL) {
+		ERROR_LOG_URL = eRROR_LOG_URL;
+	}
+
+
+	public void setERROR_COLUMNS_TITLE(String eRROR_COLUMNS_TITLE) {
+		ERROR_COLUMNS_TITLE = eRROR_COLUMNS_TITLE;
+	}
+
+
+	public void setERROR_CODE_MAP(Map<String, String> eRROR_CODE_MAP) {
+		ERROR_CODE_MAP = eRROR_CODE_MAP;
+	}
+
+
+	public static void setFilePojoMap(Map<String, FilePojo> filePojoMap) {
+		Runner.filePojoMap = filePojoMap;
+	}
+
+
+	public static void set_instance(Runner _instance) {
+		Runner._instance = _instance;
+	}
+
+
+	private static Runner _instance;
+	
+	public static Runner getInstance(){
+		return _instance;
+	}
+	
+	static{
+		FileInputStream configIn = null;
 		try {
-			String fileURL;
-			int headData = 0;
-			int columnCount = 0;
-			int rowCount = 0;
-			// 获得数据集
-			for (int i = 0; i < filesURL.length; i++) {
-
-				fileURL = filesURL[i];
-				Map<String, Object> readFile = BaseUtil.readFile(fileURL);
-
-				String encoding = (String) readFile.get("Encoding");
-				// 字符编码校验
-				if (encoding != "GBK") {
-					logger.error(fileURL + " :字符编码不是GBK！！");
-					return;
-				}
-
-				// 文件名校核
-				if (!BaseUtil.isLegalFileName(fileURL)) {
-					logger.error(fileURL + " :文件命名不合法！！");
-
-				}
-
-				// 获得数据集
-				String[][] data = (String[][]) readFile.get("DATA");
-				// 首行校验
-				// headerHandler.handerRequest(file);
-				try {
-					String firstNumber = data[0][0];
-					headData = Integer.parseInt(firstNumber);
-					columnCount = (Integer) readFile.get("COLUMN_COUNT");
-					rowCount = (Integer)  readFile.get("ROW_COUNT");
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-					logger.error(fileURL + " :首行数据格式错误！！");
-				}
-
-				if ((columnCount - headData) != 2) {
-					logger.error(fileURL + " :数据总条数不一致！！");
-				}
-
-				// 第二行校验
-				// 字段字典
-				String[] fields = data[1][0].split("\\|#\\|");
-
-				HashMap<String, BaseHandler> handlerList = MappingHandler.handlerFactory();
-				HashMap<String, String> fieldMapping = MappingHandler.fieldMapping;
-
-				// 当前行
-				for (int m = 2; m < rowCount; m++) {
-					for (int n = 0; n < columnCount; n++) {
-						// 获得检验员
-						String[] propValueCurrent = null;
-						if(fieldMapping.get(fields[n]) != null){
-							propValueCurrent = fieldMapping.get(fields[n]).split(",");
-						}else{
-							propValueCurrent = fieldMapping.get("DEFAULT").split(",");
-						}
-
-						BaseHandler handler = handlerList
-								.get(propValueCurrent[0]);
-						handler.setParameter(propValueCurrent[1]);
-
-						handler.handerRequest(data[m][n], m);
-					}
-				}
+			configIn = new FileInputStream("conf\\__init__.json");
+			byte[] buf = new byte[1024];
+			String initConfig = "";
+			int length = 0;
+			while ((length = configIn.read(buf)) != -1) {
+				initConfig += new String(buf, 0, length);
 
 			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			
+			_instance = JSON.parseObject(initConfig, Runner.class);
+			
+			List<FilePojo> filePojoList = FilePojo.getInstance();
+			for (FilePojo filePojo : filePojoList) {
+				filePojoMap.put(filePojo.getInterfaceName(), filePojo);
+			}
+
+		} catch (JsonSyntaxException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			IOUtils.closeQuietly(configIn);
 		}
 	}
+
+	
+	public void execute(){
+	
+		File files = new File(this.SRC_FILE_URL);
+		File[] listFiles = files.listFiles();
+		for (int i = 0; i < listFiles.length; i++) {
+			File file = listFiles[i];
+			String fileName = file.getName();
+			String interfaceName = fileName.substring(20, 28);
+			System.out.println("interfaceName:"+interfaceName);
+			
+			FilePojo filePojo = filePojoMap.get(interfaceName);
+			
+		}
+	}
+
 
 }

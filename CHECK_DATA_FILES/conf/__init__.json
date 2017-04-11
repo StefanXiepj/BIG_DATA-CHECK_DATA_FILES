@@ -1,16 +1,9 @@
-{
-	"handler": [
-		"IsHeaderRow",
-		"IsStringHandler",
-		"IsNumberHandler",
-		"IsDateHandler",
-		"IsEmailHandler",
-		"IsMobileHandler"
-	],
-	"columns_title": "file_name|#|file_row|#|error_code|#|error_msg|#|error_line_info",
-	"columns_title_split": "|#|",
-	"error_url": ":E:/spark/workspace01/ETLChainFileChecker/file/error_file.err",
-	"error_map": {
+{	
+	"INTERFACE_LIST":["BUS10010","BUS10152"],
+	"SRC_FILE_URL":"D:\\download\\",
+	"ERROR_LOG_URL": "D:\\download\\",
+	"ERROR_COLUMNS_TITLE": "file_name|#|file_row|#|error_code|#|error_msg|#|error_line_info",
+	"ERROR_CODE_MAP": {
 		"CHK001": "文件编码错误",
 		"CHK002": "文件记录行数错误",
 		"CHK003": "文件标题行错误",

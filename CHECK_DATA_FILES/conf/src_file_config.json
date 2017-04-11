@@ -31,7 +31,7 @@
 		]
 },
 {
-	"interfaceName":"BUS10010",
+	"interfaceName":"BUS10152",
 	"checkLevel":"NAME_ENCODING_COUNT_FIELD",
 	"appointTime":"00:30:00",
 	"encoding":"GBK",

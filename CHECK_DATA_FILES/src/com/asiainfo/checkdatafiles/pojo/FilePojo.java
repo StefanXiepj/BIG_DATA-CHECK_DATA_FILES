@@ -3,9 +3,11 @@ package com.asiainfo.checkdatafiles.pojo;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.google.gson.JsonSyntaxException;
 
@@ -115,7 +117,7 @@ public class FilePojo {
 	static {
 		FileInputStream configIn = null;
 		try {
-			configIn = new FileInputStream("conf\\src_file_config2.json");
+			configIn = new FileInputStream("conf\\src_file_config.json");
 			byte[] buf = new byte[1024];
 			String strConfig = "";
 			int length = 0;
