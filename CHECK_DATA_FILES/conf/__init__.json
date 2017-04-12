@@ -1,7 +1,7 @@
 {	
 	"INTERFACE_LIST":["BUS10010","BUS10152"],
-	"SRC_FILE_URL":"D:\\download\\",
-	"ERROR_LOG_URL": "D:\\download\\",
+	"SRC_FILE_PATH":"D:\\download\\file\\",
+	"ERROR_LOG_PATH": "D:\\download\\log\\",
 	"ERROR_COLUMNS_TITLE": "file_name|#|file_row|#|error_code|#|error_msg|#|error_line_info",
 	"ERROR_CODE_MAP": {
 		"CHK001": "ÎÄ¼þ±àÂë´íÎó",

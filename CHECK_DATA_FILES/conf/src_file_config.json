@@ -9,7 +9,7 @@
 	"columnsTitleSplit":"|#|",
 	"fields":[
 		{"fieldName":"MEID","isMust":"1","type":"String","length":"V20"},
-		{"fieldName":"PROV_CORP","isMust":"1","type":"String","length":"V10"},
+		{"fieldName":"PROV_CORP","isMust":"1","type":"Number","length":"V10"},
 		{"fieldName":"AGENT_CODE","isMust":"1","type":"String","length":"V20"},
 		{"fieldName":"INOUT_DATE","isMust":"1","type":"String","length":"V20"},
 		{"fieldName":"TERML_MOBILE","isMust":"1","type":"String","length":"V20"},

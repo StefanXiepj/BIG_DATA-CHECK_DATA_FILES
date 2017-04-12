@@ -1,6 +1,7 @@
 package com.asiainfo.checkdatafiles.util;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,47 +18,116 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.asiainfo.checkdatafiles.pojo.FieldPojo;
+import com.asiainfo.checkdatafiles.pojo.FilePojo;
+
 public class BaseUtil {
 
 	// 校验文件名
-	public static boolean isLegalFileName(String fileName) {
+	public static String isLegalFileName(FilePojo filePojo, String fileName) {
 
-		// fileName = urlStr.substring(urlStr.lastIndexOf("/") + 1,
-		// urlStr.lastIndexOf("?")>0 ? urlStr.lastIndexOf("?") :
-		// urlStr.length());
-		return true;
-	}
-	
-	//校验字段长度
-	public static boolean isOverFieldLength(String fieldData,String parameter){
 		try {
-			int fieldLength = Integer.parseInt(parameter);
-			if(fieldData.length() > fieldLength){
-				return false;
-			}else{
-			return true;
+
+			Integer retryFlag = Integer.parseInt(filePojo.getRetryFlag());
+			Integer maxRetryCnt = Integer.parseInt(filePojo.getRetryCnt());
+
+			Integer retryCnt = Integer.parseInt(fileName.substring(retryFlag, retryFlag + 1));
+
+			if (retryCnt > maxRetryCnt) {
+				return "CHK009";
 			}
+
+			return null;
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
-			return false;
+			return "CHK009";
 		}
+	}
+
+	// 校验文件延迟上传
+	public static String isUploadTooLate(FilePojo filePojo, String uploadTime) {
+
+		if (filePojo.getAppointTime() != null && !filePojo.getAppointTime().equals(uploadTime)) {
+			return "CHK008";
+		}
+		return null;
+	}
+
+	// 校验编码
+	public static String isLegalEncoding(FilePojo filePojo, String encoding) {
+
+		if (filePojo.getEncoding() != null && !filePojo.getEncoding().equals(encoding)) {
+			return "CHK001";
+		}
+		return null;
+	}
+
+	// 校验记录行数
+	public static String isLegalHederLine(FilePojo filePojo, String headerLine) {
+
+		if (filePojo.getColumnsTitle() != null && !(filePojo.getColumnsTitle().equals(headerLine))) {
+			return "CHK003";
+		}
+		return null;
+
+	}
+
+	// 校验文件标题行
+	public static String isRowsEqual(Integer topRowValue, Integer rowsCnt) {
+
+		if (!(topRowValue == (rowsCnt - 2))) {
+			return "CHK002";
+		}
+		return null;
+
+	}
+
+	// 校验非空
+	public static String isNull(FieldPojo fieldPojo, String fieldValue) {
+		Integer isMust = Integer.parseInt(fieldPojo.getIsMust());
+		if (isMust == 1 && ("".equals(fieldValue))) {
+			return "CHK013";
+		}
+		return null;
+
+	}
+	
+	// 校验字段长度
+	public static String isOverFieldLength(String fieldData, String parameter) {
+		
+		int fieldLength = Integer.parseInt(parameter);
+		if (fieldData.length() > fieldLength) {
+			return "CHK005";
+		}
+		return null;
+		
 	}
 
 	// 校验邮箱
-	public static boolean isEmail(String email) {
-		boolean flag = false;
-		try {
+	public static String isEmail(String email) {
+
 			String check = "^([a-z0-9A-Z]+[-|_|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
 			Pattern regex = Pattern.compile(check);
 			Matcher matcher = regex.matcher(email);
-			flag = matcher.matches();
-		} catch (Exception e) {
-			flag = false;
-		}
-		return flag;
+
+			if (matcher.matches()) {
+				return "CHK011";
+			}
+			return null;
+
 	}
-
-
+	
+	//校验手机号码
+	public static String isTelephoneNumber(String telephoneNumber){
+		String check = "^[1][3,4,5,8][0-9]{9}$";
+		Pattern regex = Pattern.compile(check);
+		Matcher matcher = regex.matcher(telephoneNumber);
+		
+		if(matcher.matches()){
+			return "CHK012";
+		}
+		return null;
+	}
 
 	// 校验手机号码
 	public static boolean isMobile(String str) {
@@ -88,7 +158,7 @@ public class BaseUtil {
 	}
 
 	// 校验日期格式
-	public static boolean isDateTimeWithLongFormat(String timeStr) {
+	public static String isDateTimeWithLongFormat(String timeStr) {
 		String format = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01]) "
 				+ "([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]";
 		Pattern pattern = Pattern.compile(format);
@@ -104,26 +174,24 @@ public class BaseUtil {
 					Calendar c = Calendar.getInstance();
 					c.set(y, m - 1, 1);
 					int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-					return (lastDay >= d);
+					if(lastDay >= d){return null;}
 				}
 			}
-			return true;
+			return "CHK006";
 		}
-		return false;
+		return "CHK006";
 	}
 
 	// 数字格式校验
-	public static boolean isNumber(String number) {
+	public static String isNumber(String number) {
 
 		String regex = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
 		if (!number.matches(regex)) {
-			return false;
+			return "CHK004";
 		}
-		return true;
+		return null;
 	}
-	
-	
-	
+
 	// 获取指定行
 	public static String readAppointedLineNumber(LineNumberReader reader, int selectLineNumber) {
 		try {
@@ -162,7 +230,7 @@ public class BaseUtil {
 		return count;
 	}
 
-	// 测试按字节流读取效率
+	// 按字节读取
 	public static Map<String, Object> readFile(String filename) throws IOException {
 
 		Map<String, Object> result = new HashMap<String, Object>();
@@ -178,7 +246,6 @@ public class BaseUtil {
 
 		int i;
 		while ((i = is.read()) != -1) {
-
 			stringbuffer.append((char) i);
 		}
 		String str_in = stringbuffer.toString();
@@ -186,7 +253,7 @@ public class BaseUtil {
 		is.close();
 		// 分解行
 		String[] rows = str_in.split("\\\n|\\\r\\\n");
-		
+
 		// 总行数
 		Integer m = rows.length;
 		// 列数
@@ -200,15 +267,27 @@ public class BaseUtil {
 		// 数据行
 		String[] column = new String[] {};
 		for (int x = 2; x < m; x++) {
-			String string = rows[x];
-			column = string.split("\\|");
-			for (int y = 0; y < n; y++) {
-				data[x][y] = column[y];
+			String row = rows[x];
+			Integer isNullRow = row.replaceAll("\\|", "\\|\\|").length()-row.length();
+			column = row.split("\\|");
+			
+			if(isNullRow == 7){
+				for (int y = 0; y < n; y++) {
+					data[x][y] = column[y];
+				}
+			}else if(isNullRow < 7 && isNullRow > 0){
+				for (int y = 0; y < isNullRow; y++) {
+					data[x][y] = column[y];
+				}
+				for(int y = isNullRow;y<n;y++){
+					data[x][y] = "\\|#\\|";
+				}
+			}else{
+				for(int y = 0;y<n;y++){
+					data[x][y] = "\\|#\\|";
+				}
 			}
 		}
-
-		System.out.println(m);
-		System.out.println(n);
 
 		result.put("Encoding", encoding);
 		result.put("ROW_COUNT", m);

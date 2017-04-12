@@ -53,5 +53,5 @@ public abstract class BaseHandler{
 	 *  @param request
 	 *  @param lineNumber
 	 */
-	public abstract boolean handerRequest(Object request);
+	public abstract String handerRequest(Object request);
 }
