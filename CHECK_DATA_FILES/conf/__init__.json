@@ -1,5 +1,5 @@
 {	
-	"INTERFACE_LIST":["BUS10010","BUS10152"],
+	"INTERFACE_LIST":["BUS10010","BUS10152","BUS10151"],
 	"SRC_FILE_PATH":"D:\\download\\file\\",
 	"ERROR_LOG_PATH": "D:\\download\\log\\",
 	"ERROR_COLUMNS_TITLE": "file_name|#|file_row|#|error_code|#|error_msg|#|error_line_info",
@@ -13,6 +13,10 @@
 		"CHK007": "文件字段数错误",
 		"CHK008": "文件延迟上传",
 		"CHK009": "文件重传序号错误",
-		"CHK010": "文件数据行存在空行"
+		"CHK010": "文件数据行存在空行",
+		"CHK011": "邮箱格式错误",
+		"CHK012": "手机号码格式错误",
+		"CHK013": "字段值不能为空",
+		"CHK014": "数据集字段数量不匹配",
 	}
 }

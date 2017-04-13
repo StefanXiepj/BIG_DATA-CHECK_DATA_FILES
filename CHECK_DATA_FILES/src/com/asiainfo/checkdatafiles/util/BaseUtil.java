@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -30,8 +33,7 @@ public class BaseUtil {
 
 			Integer retryFlag = Integer.parseInt(filePojo.getRetryFlag());
 			Integer maxRetryCnt = Integer.parseInt(filePojo.getRetryCnt());
-
-			Integer retryCnt = Integer.parseInt(fileName.substring(retryFlag, retryFlag + 1));
+			Integer retryCnt = Integer.parseInt(fileName.substring(retryFlag-1, retryFlag));
 
 			if (retryCnt > maxRetryCnt) {
 				return "CHK009";
@@ -46,9 +48,15 @@ public class BaseUtil {
 
 	// 校验文件延迟上传
 	public static String isUploadTooLate(FilePojo filePojo, String uploadTime) {
-
-		if (filePojo.getAppointTime() != null && !filePojo.getAppointTime().equals(uploadTime)) {
-			return "CHK008";
+		String appointTime = filePojo.getAppointTime();
+		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		try {
+			if (appointTime != null && sdf.parse(uploadTime).getTime() > sdf.parse(filePojo.getAppointTime()).getTime()) {
+				return "CHK008";
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
 		}
 		return null;
 	}
@@ -62,7 +70,7 @@ public class BaseUtil {
 		return null;
 	}
 
-	// 校验记录行数
+	// 校验文件标题行
 	public static String isLegalHederLine(FilePojo filePojo, String headerLine) {
 
 		if (filePojo.getColumnsTitle() != null && !(filePojo.getColumnsTitle().equals(headerLine))) {
@@ -72,7 +80,7 @@ public class BaseUtil {
 
 	}
 
-	// 校验文件标题行
+	// 校验记录行数
 	public static String isRowsEqual(Integer topRowValue, Integer rowsCnt) {
 
 		if (!(topRowValue == (rowsCnt - 2))) {
@@ -94,10 +102,17 @@ public class BaseUtil {
 	
 	// 校验字段长度
 	public static String isOverFieldLength(String fieldData, String parameter) {
+		Integer legalLength = Integer.parseInt(parameter.substring(1));
+		if(parameter.contains("V")){
+			if (fieldData.length() > legalLength) {
+				return "CHK005";
+			}
+		}
 		
-		int fieldLength = Integer.parseInt(parameter);
-		if (fieldData.length() > fieldLength) {
-			return "CHK005";
+		if(parameter.contains("F")){
+			if (fieldData.length() != legalLength) {
+				return "CHK005";
+			}
 		}
 		return null;
 		
@@ -124,9 +139,9 @@ public class BaseUtil {
 		Matcher matcher = regex.matcher(telephoneNumber);
 		
 		if(matcher.matches()){
-			return "CHK012";
+			return null;
 		}
-		return null;
+		return "CHK012";
 	}
 
 	// 校验手机号码
@@ -174,8 +189,9 @@ public class BaseUtil {
 					Calendar c = Calendar.getInstance();
 					c.set(y, m - 1, 1);
 					int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-					if(lastDay >= d){return null;}
+					if(lastDay < d){return "CHK006";}
 				}
+				return null;
 			}
 			return "CHK006";
 		}
@@ -185,11 +201,13 @@ public class BaseUtil {
 	// 数字格式校验
 	public static String isNumber(String number) {
 
-		String regex = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
-		if (!number.matches(regex)) {
-			return "CHK004";
+		String check = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
+		Pattern regex = Pattern.compile(check);
+		Matcher matcher = regex.matcher(number);
+		if (matcher.matches()) {
+			return null;
 		}
-		return null;
+		return "CHK004";
 	}
 
 	// 获取指定行
@@ -268,23 +286,26 @@ public class BaseUtil {
 		String[] column = new String[] {};
 		for (int x = 2; x < m; x++) {
 			String row = rows[x];
-			Integer isNullRow = row.replaceAll("\\|", "\\|\\|").length()-row.length();
-			column = row.split("\\|");
+			Integer isNullRow = 0;
+			if(row.length() > 0){
+				isNullRow = row.length() - row.replaceAll("\\|#\\|", "\\|#").length() + 1;
+				column = row.split("\\|#\\|");
+			}
 			
-			if(isNullRow == 7){
+			if(isNullRow == n){
 				for (int y = 0; y < n; y++) {
 					data[x][y] = column[y];
 				}
-			}else if(isNullRow < 7 && isNullRow > 0){
+			}else if(isNullRow < n && isNullRow > 0){
 				for (int y = 0; y < isNullRow; y++) {
 					data[x][y] = column[y];
 				}
 				for(int y = isNullRow;y<n;y++){
-					data[x][y] = "\\|#\\|";
+					data[x][y] = "|#|";
 				}
 			}else{
 				for(int y = 0;y<n;y++){
-					data[x][y] = "\\|#\\|";
+					data[x][y] = "|#|";
 				}
 			}
 		}
@@ -295,6 +316,17 @@ public class BaseUtil {
 		result.put("DATA", data);
 
 		return result;
+	}
+	
+	
+	public static int subStrCnt(String superString,String subString){
+		int count = 0;  
+        int index = superString.indexOf(superString);  
+        while(index != -1) {  
+            count++;  
+            index = superString.indexOf(subString, index+subString.length());  
+        }  
+        return count;
 	}
 
 }

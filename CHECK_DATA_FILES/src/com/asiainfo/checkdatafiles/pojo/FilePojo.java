@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 public class FilePojo {
@@ -127,6 +128,7 @@ public class FilePojo {
 			}
 
 			_instance = JSONArray.parseArray(strConfig, FilePojo.class);
+			
 
 		} catch (JsonSyntaxException e) {
 			e.printStackTrace();

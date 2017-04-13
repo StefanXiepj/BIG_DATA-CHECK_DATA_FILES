@@ -109,8 +109,17 @@ public class ChainFileChecker {
 			File file = listFiles[i];
 
 			// 过滤掉正在上传以及正在校验的文件
-			if (!file.exists() && !file.getName().endsWith(".ing") && file.getName().endsWith(".checking") && file.getName().endsWith(".checked")) {
+			if (!file.exists()) {
 				return;
+			}
+			if(file.getName().endsWith(".ing")){
+				continue;
+			}
+			if(file.getName().endsWith(".checking")){
+				continue;
+			}
+			if(file.getName().endsWith(".checked")){
+				continue;
 			}
 
 			// 获取接口名称
@@ -125,12 +134,14 @@ public class ChainFileChecker {
 			}
 
 			// 修改文件名为。checking,开始校验
-			file.renameTo(new File(file.getAbsolutePath() + ".checking"));
+			File checkingFile = new File(file.getAbsolutePath() + ".checking");
+			file.renameTo(checkingFile);
 
 			// 创建反馈文件
 			String errorPath = ERROR_LOG_PATH + fileName + ".error";
 			File errorFile = new File(errorPath);
-			if (!errorFile.exists()) {
+			if (errorFile.exists()) {
+				errorFile.delete();
 				errorFile.createNewFile();
 			}
 
@@ -138,7 +149,7 @@ public class ChainFileChecker {
 			String checkLevel = filePojo.getCheckLevel();
 
 			if ("NAME_ENCODING_COUNT_FIELD".equals(checkLevel)) {
-				checker(filePojo, file, errorFile, fileName);
+				checker(filePojo, checkingFile, errorFile);
 			}
 			if ("ENCODING_COUNT_FIELD".equals(checkLevel)) {
 
@@ -148,13 +159,15 @@ public class ChainFileChecker {
 			if ("FIELD".equals(checkLevel)) {
 			}
 			
-			file.renameTo(new File(file.getAbsolutePath()+".che"));
+			//校验完毕，更改文件状态
+			checkingFile.renameTo(new File(file.getAbsolutePath()+".checked"));
 
 		}
 	}
 
-	private void checker(FilePojo filePojo, File file, File errorFile, String fileName) {
+	private void checker(FilePojo filePojo, File checkingFile, File errorFile) {
 		try {
+			String fileName = checkingFile.getName().substring(0, checkingFile.getName().lastIndexOf("."));
 			// 错误信息
 			String errorMsg = "";
 			// 错误数量
@@ -164,30 +177,30 @@ public class ChainFileChecker {
 			// 错误相应编码
 			String checkOutFlag = "";
 			// 获取上传时间
-			long lastModified = file.lastModified();
+			long lastModified = checkingFile.lastModified();
 			Calendar cd = Calendar.getInstance();
 			cd.setTimeInMillis(lastModified);
 			String uploadtime = DateFormat.getTimeInstance().format(cd.getTime());
 			// 读取文件流
-			Map<String, Object> readFile = BaseUtil.readFile(fileName);
+			Map<String, Object> readFile = BaseUtil.readFile(checkingFile.getAbsolutePath());
 			// 文件编码
 			String encoding = (String) readFile.get("Encoding");
 			// 总行数
-			Integer row_count = Integer.parseInt((String) readFile.get("ROW_COUNT"));
+			Integer row_count = (Integer) readFile.get("ROW_COUNT");
 			// 总列数
-			Integer column_Count = Integer.parseInt((String) readFile.get("COLUMN_COUNT"));
+			Integer column_Count = (Integer) readFile.get("COLUMN_COUNT");
 			// 总数据集
 			String[][] data = (String[][]) readFile.get("DATA");
 			// 首行值
 			Integer topRowValue = Integer.parseInt(data[0][0]);
 			// 第二行值
 			String secondRowValue = data[1][0];
-
+			
 			// 校验文件名
 			checkOutFlag = BaseUtil.isLegalFileName(filePojo, fileName);
 			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 				errorMsg += (fileName + columnsTitleSplit + "0" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCount++;
 			}
 
@@ -195,7 +208,7 @@ public class ChainFileChecker {
 			checkOutFlag = BaseUtil.isUploadTooLate(filePojo, uploadtime);
 			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 				errorMsg += (fileName + columnsTitleSplit + "0" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCount++;
 			}
 
@@ -203,23 +216,23 @@ public class ChainFileChecker {
 			checkOutFlag = BaseUtil.isLegalEncoding(filePojo, encoding);
 			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 				errorMsg += (fileName + columnsTitleSplit + "0" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCount++;
 			}
 
 			// 文件记录行数校验
 			checkOutFlag = BaseUtil.isRowsEqual(topRowValue, row_count);
-			if (!(ERROR_CODE_MAP.get(checkOutFlag) != null)) {
+			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 				errorMsg += (fileName + columnsTitleSplit + "1" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCount++;
 			}
 
 			// 文件标题行校验
 			checkOutFlag = BaseUtil.isLegalHederLine(filePojo, secondRowValue);
-			if (!(ERROR_CODE_MAP.get(checkOutFlag) != null)) {
+			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 				errorMsg += (fileName + columnsTitleSplit + "2" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCount++;
 			}
 
@@ -231,22 +244,22 @@ public class ChainFileChecker {
 					String fieldValue = data[i][j];
 
 					// 空行校验
-					if (j == 0 && "\\|#\\|".equals(fieldValue) && ERROR_CODE_MAP.get(checkOutFlag)!=null) {
+					if (j == 0 && "\\|#\\|".equals(fieldValue)) {
 						checkOutFlag = "CHK010";
 						if(ERROR_CODE_MAP.get(checkOutFlag) != null){
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 							errorCount++;
 						}
-						continue;
+						break;
 					}
 					
 					// 数据集字段数量不匹配
 					if (j != 0 && "\\|#\\|".equals(fieldValue)) {
-						checkOutFlag = "CHK014";
+						checkOutFlag = "CHK007";
 						if(ERROR_CODE_MAP.get(checkOutFlag) != null){
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 							errorCount++;
 						}
 						continue;
@@ -254,10 +267,10 @@ public class ChainFileChecker {
 					
 
 					// 非空校验
-					checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
+					checkOutFlag = BaseUtil.isNull(fieldPojo, fieldValue);
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 						errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 						errorCount++;
 						continue;
 					}
@@ -265,50 +278,50 @@ public class ChainFileChecker {
 					checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 						errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 						errorCount++;
 						continue;
 					}
 
 					// 数字格式校验
-					if (fieldPojo.getType().equals("Number")) {
-						checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
+					if ("Number".equals(fieldPojo.getType())) {
+						checkOutFlag = BaseUtil.isNumber(fieldValue);
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 							errorCount++;
 						}
 						continue;
 					}
 
 					// 日期格式校验
-					if (fieldPojo.getType().equals("Date")) {
+					if ("Date".equals(fieldPojo.getType())) {
 						checkOutFlag = BaseUtil.isDateTimeWithLongFormat(fieldValue);
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 							errorCount++;
 						}
 						continue;
 					}
 
 					// 邮箱格式校验
-					if (fieldPojo.getType().equals("Email")) {
+					if ("Email".equals(fieldPojo.getType())) {
 						checkOutFlag = BaseUtil.isEmail(fieldValue);
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 							errorCount++;
 						}
 						continue;
 					}
 
 					// 手机号码格式校验
-					if (fieldPojo.getType().equals("Telephone")) {
+					if ("Telephone".equals(fieldPojo.getType())) {
 						checkOutFlag = BaseUtil.isTelephoneNumber(fieldValue);
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\\n");
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 							errorCount++;
 						}
 						continue;
@@ -322,8 +335,8 @@ public class ChainFileChecker {
 			//输出log
 			if(errorCount !=0){
 				FileWriter fw = new FileWriter(errorFile);
-				fw.write(String.valueOf(errorCount));
-				fw.write(ERROR_COLUMNS_TITLE+filePojo.getColumnsTitle());
+				fw.write(String.valueOf(errorCount)+"\n");
+				fw.write(ERROR_COLUMNS_TITLE+filePojo.getColumnsTitle()+"\n");
 				fw.write(errorMsg);
 				fw.flush();
 				fw.close();
@@ -335,6 +348,8 @@ public class ChainFileChecker {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally{
+			
 		}
 
 	}
