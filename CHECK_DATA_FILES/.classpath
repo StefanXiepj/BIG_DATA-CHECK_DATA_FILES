@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/gson-2.2.4.jar"/>
 	<classpathentry kind="lib" path="lib/fastjson-1.2.7.jar"/>
 	<classpathentry kind="lib" path="lib/chardet.jar"/>
+	<classpathentry kind="lib" path="lib/file_charset_etector.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

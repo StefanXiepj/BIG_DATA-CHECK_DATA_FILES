@@ -11,7 +11,7 @@ import org.junit.Test;
 import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
-import com.asiainfo.checkdatafiles.util.BaseUtil;
+import org.flame.check.FileCharsetDetector;
 
 public class TestMultiThreadDownLoad {
 	
@@ -33,13 +33,11 @@ public class TestMultiThreadDownLoad {
 		/*String fileName = "A0000059A8A362|#|18004788309|#|460036940781255|#|ÄÚÃÉ¹Å|#|°ÍÑåÄ×¶û|#|»ªÎª|#|HW-KIW CL00|#|KIW-CL00C92B437|#|2017-03-22 00:00:08";
 		int subStrCnt = BaseUtil.subStrCnt(fileName, "\\|#\\|");
 		System.out.println("subStrCnt:"+subStrCnt);*/
-		BaseUtil util = new BaseUtil();
 		File file = new File("D:/download/file/20000000012008330004BUS10151201305301006.txt.checking");
+		FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
 		try {
-			String guessFileEncoding = util.guessFileEncoding(file, 2);
-			String guessFileEncoding2 = util.guessFileEncoding(file);
-			//System.out.println(guessFileEncoding);
-			System.out.println(guessFileEncoding2);
+		String guessFileEncoding = fileCharsetDetector.guessFileEncoding(file);
+			System.out.println(guessFileEncoding);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
