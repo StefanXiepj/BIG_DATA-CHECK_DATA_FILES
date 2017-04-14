@@ -37,7 +37,9 @@ public class TestMultiThreadDownLoad {
 		File file = new File("D:/download/file/20000000012008330004BUS10151201305301006.txt.checking");
 		try {
 			String guessFileEncoding = util.guessFileEncoding(file, 2);
-			System.out.println(guessFileEncoding);
+			String guessFileEncoding2 = util.guessFileEncoding(file);
+			//System.out.println(guessFileEncoding);
+			System.out.println(guessFileEncoding2);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

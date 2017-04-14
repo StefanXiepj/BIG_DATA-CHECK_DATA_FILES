@@ -2,28 +2,18 @@ package com.asiainfo.checkdatafiles.beltline;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.asiainfo.checkdatafiles.handler.BaseHandler;
-import com.asiainfo.checkdatafiles.handler.CheckNumberHandler;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 public class ChainFileChecker {
