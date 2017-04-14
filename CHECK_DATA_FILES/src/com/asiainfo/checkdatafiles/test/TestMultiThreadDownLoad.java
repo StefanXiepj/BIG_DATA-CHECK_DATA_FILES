@@ -34,9 +34,9 @@ public class TestMultiThreadDownLoad {
 		int subStrCnt = BaseUtil.subStrCnt(fileName, "\\|#\\|");
 		System.out.println("subStrCnt:"+subStrCnt);*/
 		File file = new File("D:/download/file/20000000012008330004BUS10151201305301006.txt.checking");
-		FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
 		try {
-		String guessFileEncoding = fileCharsetDetector.guessFileEncoding(file);
+			FileCharsetDetector fileCharsetDetector2 = new FileCharsetDetector();
+		String guessFileEncoding = fileCharsetDetector2.guessFileEncoding(file);
 			System.out.println(guessFileEncoding);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
