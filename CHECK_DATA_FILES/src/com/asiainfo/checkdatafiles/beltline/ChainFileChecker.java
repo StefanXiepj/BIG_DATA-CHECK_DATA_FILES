@@ -185,6 +185,7 @@ public class ChainFileChecker {
 			Map<String, Object> readFile = BaseUtil.readFile(checkingFile.getAbsolutePath());
 			// 文件编码
 			String encoding = (String) readFile.get("Encoding");
+			System.out.println("encoding:"+encoding);
 			// 总行数
 			Integer row_count = (Integer) readFile.get("ROW_COUNT");
 			// 总列数
@@ -244,7 +245,7 @@ public class ChainFileChecker {
 					String fieldValue = data[i][j];
 
 					// 空行校验
-					if (j == 0 && "\\|#\\|".equals(fieldValue)) {
+					if (j == 0 && "|#|".equals(fieldValue)) {
 						checkOutFlag = "CHK010";
 						if(ERROR_CODE_MAP.get(checkOutFlag) != null){
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
@@ -255,7 +256,7 @@ public class ChainFileChecker {
 					}
 					
 					// 数据集字段数量不匹配
-					if (j != 0 && "\\|#\\|".equals(fieldValue)) {
+					if (j != 0 && "|#|".equals(fieldValue)) {
 						checkOutFlag = "CHK007";
 						if(ERROR_CODE_MAP.get(checkOutFlag) != null){
 							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag

@@ -1,6 +1,8 @@
 package com.asiainfo.checkdatafiles.test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -31,16 +33,31 @@ public class TestMultiThreadDownLoad {
 		/*String fileName = "A0000059A8A362|#|18004788309|#|460036940781255|#|内蒙古|#|巴彦淖尔|#|华为|#|HW-KIW CL00|#|KIW-CL00C92B437|#|2017-03-22 00:00:08";
 		int subStrCnt = BaseUtil.subStrCnt(fileName, "\\|#\\|");
 		System.out.println("subStrCnt:"+subStrCnt);*/
+		BaseUtil util = new BaseUtil();
+		File file = new File("D:/download/file/20000000012008330004BUS10151201305301006.txt.checking");
+		try {
+			String guessFileEncoding = util.guessFileEncoding(file, 2);
+			System.out.println(guessFileEncoding);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
 		
-		String str = "|#|";
-		System.out.println("|#|".equals(str));
 		
 	}
 	@Ignore	
 	@Test
 	public void testExecute1() throws Exception{
+		long startTimeMillis = System.currentTimeMillis();
 		ChainFileChecker instance = ChainFileChecker.getInstance();
 		instance.execute();
+		long currentTimeMillis = System.currentTimeMillis();
+		
+		System.out.println("运行时长："+(currentTimeMillis - startTimeMillis));
 	}
 	@Ignore	
 	@Test

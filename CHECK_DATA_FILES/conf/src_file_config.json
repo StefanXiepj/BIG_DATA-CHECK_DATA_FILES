@@ -69,7 +69,7 @@
 	"encoding":"GBK",
 	"retryFlag":"37",
 	"retryCnt":"8",
-	"columnsTitle":"ID|#|TELPHONE|#|PROVICECODE|#|PROVICENAME|#|CITYNAME|#|BAND|#|BANDNAME|#|BANDCODE|#|GATHER_DAY",
+	"columnsTitle":"ID|#|TELPHONE|#|PROVICECODE|#|PROVICENAME|#|CITYNAME|#|BAND|#|BANDNAME|#|BANDCODE|#|EMAIL|#|GATHER_DAY",
 	"columnsTitleSplit":"|#|",
 	"fields":[
 		{"fieldName":"ID","isMust":"1","type":"String","length":"V100"},
@@ -80,6 +80,7 @@
 		{"fieldName":"BAND","isMust":"1","type":"String","length":"V100"},
 		{"fieldName":"BANDNAME","isMust":"1","type":"String","length":"V100"},
 		{"fieldName":"BANDCODE","isMust":"1","type":"String","length":"V100"},
+		{"fieldName":"EMAIL","isMust":"1","type":"Email","length":"V100"},
 		{"fieldName":"GATHER_DAY","isMust":"1","type":"Date","length":"V100"}
 		]
 }
