@@ -27,14 +27,13 @@ import org.mozilla.intl.chardet.nsICharsetDetectionObserver;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 
-
 /**
- *  Class Name: BaseUtil.java
- *  Description: 
- *  @author Stefan_xiepj  DateTime 2017年4月14日 上午10:02:06 
- *  @company asiainfo 
- *  @email xiepj@asiainfo.com.cn  
- *  @version 1.0
+ * Class Name: BaseUtil.java Description:
+ * 
+ * @author Stefan_xiepj DateTime 2017年4月14日 上午10:02:06
+ * @company asiainfo
+ * @email xiepj@asiainfo.com.cn
+ * @version 1.0
  */
 public class BaseUtil {
 
@@ -45,7 +44,7 @@ public class BaseUtil {
 
 			Integer retryFlag = Integer.parseInt(filePojo.getRetryFlag());
 			Integer maxRetryCnt = Integer.parseInt(filePojo.getRetryCnt());
-			Integer retryCnt = Integer.parseInt(fileName.substring(retryFlag-1, retryFlag));
+			Integer retryCnt = Integer.parseInt(fileName.substring(retryFlag - 1, retryFlag));
 
 			if (retryCnt > maxRetryCnt) {
 				return "CHK009";
@@ -63,7 +62,8 @@ public class BaseUtil {
 		String appointTime = filePojo.getAppointTime();
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		try {
-			if (appointTime != null && sdf.parse(uploadTime).getTime() > sdf.parse(filePojo.getAppointTime()).getTime()) {
+			if (appointTime != null
+					&& sdf.parse(uploadTime).getTime() > sdf.parse(filePojo.getAppointTime()).getTime()) {
 				return "CHK008";
 			}
 		} catch (ParseException e) {
@@ -75,11 +75,25 @@ public class BaseUtil {
 
 	// 校验编码
 	public static String isLegalEncoding(FilePojo filePojo, String encoding) {
+		// 设置字符缺省编码为 GBK，当未指定校验编码时，采用GBK编码校验
+		String charset = "GBK";
+		// 获取用户指定编码
+		if (filePojo.getEncoding() != null) {
+			charset = filePojo.getEncoding();
+		}
 
-		if (filePojo.getEncoding() != null && !filePojo.getEncoding().equals(encoding)) {
+		if ("GBK".equals(filePojo.getEncoding())) {
+			if (charset.equals(encoding) || "GB2312".equals(encoding) || "GB18030".equals(encoding)) {
+				return null;
+			} else {
+				return "CHK001";
+			}
+		} else if (filePojo.getEncoding().equals(encoding)) {
+			return null;
+		} else {
 			return "CHK001";
 		}
-		return null;
+
 	}
 
 	// 校验文件标题行
@@ -111,51 +125,50 @@ public class BaseUtil {
 		return null;
 
 	}
-	
+
 	// 校验字段长度
 	public static String isOverFieldLength(String fieldData, String parameter) {
 		Integer legalLength = Integer.parseInt(parameter.substring(1));
-		if(parameter.contains("V")){
+		if (parameter.contains("V")) {
 			if (fieldData.length() > legalLength) {
 				return "CHK005";
 			}
 		}
-		
-		if(parameter.contains("F")){
+
+		if (parameter.contains("F")) {
 			if (fieldData.length() != legalLength) {
 				return "CHK005";
 			}
 		}
 		return null;
-		
+
 	}
 
 	// 校验邮箱
 	public static String isEmail(String email) {
 
-			String check = "^([a-z0-9A-Z]+[-|_|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
-			Pattern regex = Pattern.compile(check);
-			Matcher matcher = regex.matcher(email);
+		String check = "^([a-z0-9A-Z]+[-|_|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+		Pattern regex = Pattern.compile(check);
+		Matcher matcher = regex.matcher(email);
 
-			if (matcher.matches()) {
-				return null;
-			}
-			return "CHK011";
+		if (matcher.matches()) {
+			return null;
+		}
+		return "CHK011";
 
 	}
-	
-	//校验手机号码
-	public static String isTelephoneNumber(String telephoneNumber){
+
+	// 校验手机号码
+	public static String isTelephoneNumber(String telephoneNumber) {
 		String check = "^[1][3,4,5,8][0-9]{9}$";
 		Pattern regex = Pattern.compile(check);
 		Matcher matcher = regex.matcher(telephoneNumber);
-		
-		if(matcher.matches()){
+
+		if (matcher.matches()) {
 			return null;
 		}
 		return "CHK012";
 	}
-
 
 	// 校验日期格式
 	public static String isDateTimeWithLongFormat(String timeStr) {
@@ -174,7 +187,9 @@ public class BaseUtil {
 					Calendar c = Calendar.getInstance();
 					c.set(y, m - 1, 1);
 					int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-					if(lastDay < d){return "CHK006";}
+					if (lastDay < d) {
+						return "CHK006";
+					}
 				}
 				return null;
 			}
@@ -238,12 +253,6 @@ public class BaseUtil {
 
 		Map<String, Object> result = new HashMap<String, Object>();
 
-		// 读取编码
-		FileReader in = new FileReader(filename);
-		String encoding = in.getEncoding();
-
-		in.close();
-
 		InputStream is = new BufferedInputStream(new FileInputStream(filename));
 		StringBuffer stringbuffer = new StringBuffer();
 
@@ -272,152 +281,155 @@ public class BaseUtil {
 		for (int x = 2; x < m; x++) {
 			String row = rows[x];
 			Integer isNullRow = 0;
-			if(row.length() > 0){
+			if (row.length() > 0) {
 				isNullRow = row.length() - row.replaceAll("\\|#\\|", "\\|#").length() + 1;
 				column = row.split("\\|#\\|");
 			}
-			
-			if(isNullRow == n){
+
+			if (isNullRow == n) {
 				for (int y = 0; y < n; y++) {
 					data[x][y] = column[y];
 				}
-			}else if(isNullRow < n && isNullRow > 0){
+			} else if (isNullRow < n && isNullRow > 0) {
 				for (int y = 0; y < isNullRow; y++) {
 					data[x][y] = column[y];
 				}
-				for(int y = isNullRow;y<n;y++){
+				for (int y = isNullRow; y < n; y++) {
 					data[x][y] = "|#|";
 				}
-			}else{
-				for(int y = 0;y<n;y++){
+			} else if (isNullRow > n) {
+				for (int y = 0; y < n - 1; y++) {
+					data[x][y] = column[y];
+				}
+				data[x][n-1] = "|#|";
+			} else {
+				for (int y = 0; y < n; y++) {
 					data[x][y] = "|#|";
 				}
 			}
 		}
 
-		result.put("Encoding", encoding);
 		result.put("ROW_COUNT", m);
 		result.put("COLUMN_COUNT", n);
 		result.put("DATA", data);
 
 		return result;
 	}
-	
-	
-	public static int subStrCnt(String superString,String subString){
-		int count = 0;  
-        int index = superString.indexOf(superString);  
-        while(index != -1) {  
-            count++;  
-            index = superString.indexOf(subString, index+subString.length());  
-        }
-        return count;
+
+	public static int subStrCnt(String superString, String subString) {
+		int count = 0;
+		int index = superString.indexOf(superString);
+		while (index != -1) {
+			count++;
+			index = superString.indexOf(subString, index + subString.length());
+		}
+		return count;
 	}
-	
-	String encoding ;
+
+	String encoding;
 	boolean found;
-	
+
 	/**
-     * 传入一个文件(File)对象，检查文件编码
-     * 
-     * @param file
-     *            File对象实例
-     * @return 文件编码，若无，则返回null
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public String guessFileEncoding(File file) throws FileNotFoundException, IOException {
-        return guessFileEncoding(file, new nsDetector());
-    }
+	 * 传入一个文件(File)对象，检查文件编码
+	 * 
+	 * @param file
+	 *            File对象实例
+	 * @return 文件编码，若无，则返回null
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public String guessFileEncoding(File file) throws FileNotFoundException, IOException {
+		return guessFileEncoding(file, new nsDetector());
+	}
 
-    /**
-     * <pre>
-     * 获取文件的编码
-     * @param file
-     *            File对象实例
-     * @param languageHint
-     *            语言提示区域代码 @see #nsPSMDetector ,取值如下：
-     *             1 : Japanese
-     *             2 : Chinese
-     *             3 : Simplified Chinese
-     *             4 : Traditional Chinese
-     *             5 : Korean
-     *             6 : Dont know(default)
-     * </pre>
-     * 
-     * @return 文件编码，eg：UTF-8,GBK,GB2312形式(不确定的时候，返回可能的字符编码序列)；若无，则返回null
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public String guessFileEncoding(File file, int languageHint) throws FileNotFoundException, IOException {
-        return guessFileEncoding(file, new nsDetector(languageHint));
-    }
+	/**
+	 * <pre>
+	 * 获取文件的编码
+	 * &#64;param file
+	 *            File对象实例
+	 * &#64;param languageHint
+	 *            语言提示区域代码 @see #nsPSMDetector ,取值如下：
+	 *             1 : Japanese
+	 *             2 : Chinese
+	 *             3 : Simplified Chinese
+	 *             4 : Traditional Chinese
+	 *             5 : Korean
+	 *             6 : Dont know(default)
+	 * </pre>
+	 * 
+	 * @return 文件编码，eg：UTF-8,GBK,GB2312形式(不确定的时候，返回可能的字符编码序列)；若无，则返回null
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public String guessFileEncoding(File file, int languageHint) throws FileNotFoundException, IOException {
+		return guessFileEncoding(file, new nsDetector(languageHint));
+	}
 
-    /**
-     * 获取文件的编码
-     * 
-     * @param file
-     * @param det
-     * @return
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private String guessFileEncoding(File file, nsDetector det) throws FileNotFoundException, IOException {
-        // Set an observer...
-        // The Notify() will be called when a matching charset is found.
-        det.Init(new nsICharsetDetectionObserver() {
-            public void Notify(String charset) {
-                encoding = charset;
-                found = true;
-            }
-        });
+	/**
+	 * 获取文件的编码
+	 * 
+	 * @param file
+	 * @param det
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private String guessFileEncoding(File file, nsDetector det) throws FileNotFoundException, IOException {
+		// Set an observer...
+		// The Notify() will be called when a matching charset is found.
+		det.Init(new nsICharsetDetectionObserver() {
+			public void Notify(String charset) {
+				encoding = charset;
+				found = true;
+			}
+		});
 
-        BufferedInputStream imp = new BufferedInputStream(new FileInputStream(file));
-        byte[] buf = new byte[1024];
-        int len;
-        boolean done = false;
-        boolean isAscii = false;
+		BufferedInputStream imp = new BufferedInputStream(new FileInputStream(file));
+		byte[] buf = new byte[1024];
+		int len;
+		boolean done = false;
+		boolean isAscii = false;
 
-        while ((len = imp.read(buf, 0, buf.length)) != -1) {
-            // Check if the stream is only ascii.
-            isAscii = det.isAscii(buf, len);
-            if (isAscii) {
-                break;
-            }
-            // DoIt if non-ascii and not done yet.
-            done = det.DoIt(buf, len, false);
-            if (done) {
-                break;
-            }
-        }
-        
-        imp.close();
-        det.DataEnd();
+		while ((len = imp.read(buf, 0, buf.length)) != -1) {
+			// Check if the stream is only ascii.
+			isAscii = det.isAscii(buf, len);
+			if (isAscii) {
+				break;
+			}
+			// DoIt if non-ascii and not done yet.
+			done = det.DoIt(buf, len, false);
+			if (done) {
+				break;
+			}
+		}
 
-        if (isAscii) {
-            encoding = "ASCII";
-            found = true;
-        }
+		imp.close();
+		det.DataEnd();
 
-        if (!found) {
-            String[] prob = det.getProbableCharsets();
-            //这里将可能的字符集组合起来返回
-            for (int i = 0; i < prob.length; i++) {
-                if (i == 0) {
-                    encoding = prob[i];
-                } else {
-                    encoding += "," + prob[i];
-                }
-            }
+		if (isAscii) {
+			encoding = "ASCII";
+			found = true;
+		}
 
-            if (prob.length > 0) {
-                // 在没有发现情况下,也可以只取第一个可能的编码,这里返回的是一个可能的序列
-                return encoding;
-            } else {
-                return null;
-            }
-        }
-        return encoding;
-    }
+		if (!found) {
+			String[] prob = det.getProbableCharsets();
+			// 这里将可能的字符集组合起来返回
+			for (int i = 0; i < prob.length; i++) {
+				if (i == 0) {
+					encoding = prob[i];
+				} else {
+					encoding += "," + prob[i];
+				}
+			}
+
+			if (prob.length > 0) {
+				// 在没有发现情况下,也可以只取第一个可能的编码,这里返回的是一个可能的序列
+				return encoding;
+			} else {
+				return null;
+			}
+		}
+		return encoding;
+	}
 
 }
