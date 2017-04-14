@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.mozilla.intl.chardet.nsDetector;
 import org.mozilla.intl.chardet.nsICharsetDetectionObserver;
 
-public class FileCharsetDetector2 {
+public class FileCharsetDetector {
     private boolean found = false;
     private String encoding = null;
 
