@@ -2,8 +2,11 @@ package com.asiainfo.checkdatafiles.beltline;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -147,8 +150,6 @@ public class ChainFileChecker {
 			String checkLevel = filePojo.getCheckLevel();
 
 			if ("NAME_ENCODING_COUNT_FIELD".equals(checkLevel)) {
-				FileInputStream fi = null;
-				FileChannel channel = fi.getChannel();
 				checkedResult = checker(filePojo, checkingFile, errorFile);
 				if (checkedResult) {
 					logger.info(fileName + " is a Legal File!!!");
@@ -218,30 +219,19 @@ public class ChainFileChecker {
 				return false;
 			}
 
-			// 流校验
-			
-			FileInputStream in = new FileInputStream(checkingFile);
-			FileChannel channel = in.getChannel();
-			long fileSize = channel.size();
-			channel.close();
-			in.close();
-			if(fileSize <= 8*1024*1024*200){
-				
-			}
-
-			// 读取文件流
-			Map<String, Object> readFile = BaseUtil.readFile(checkingFile.getAbsolutePath());
+			Reader in = new FileReader(checkingFile);
+			LineNumberReader reader = new LineNumberReader(in);
 
 			// 总行数
-			Integer row_count = (Integer) readFile.get("ROW_COUNT");
+			Integer row_count = BaseUtil.totalLines(checkingFile.getAbsolutePath());
 			// 总列数
-			Integer column_Count = (Integer) readFile.get("COLUMN_COUNT");
+			Integer column_Count = filePojo.getColumnsTitle().split(filePojo.getColumnsTitleSplit()).length;
 			// 总数据集
-			String[][] data = (String[][]) readFile.get("DATA");
+			// String[][] data = (String[][]) readFile.get("DATA");
 			// 首行值
-			Integer topRowValue = Integer.parseInt(data[0][0]);
+			Integer topRowValue = Integer.parseInt(BaseUtil.readAppointedLineNumber(reader, 1));
 			// 第二行值
-			String secondRowValue = data[1][0];
+			String secondRowValue = BaseUtil.readAppointedLineNumber(reader, 2);
 
 			// 文件记录行数校验
 			checkOutFlag = BaseUtil.isRowsEqual(topRowValue, row_count);
@@ -260,112 +250,121 @@ public class ChainFileChecker {
 			}
 
 			FieldPojo[] fields = filePojo.getFields();
+			FieldPojo fieldPojo;
+			String rowValue = null;
+			String[] fieldsArray;
+			String fieldValue;
+			
+			ThreadGroup threadGroup = System.getSecurityManager().getThreadGroup();
+			
+			
 			// 数据集校验
 			for (int i = 2; i < row_count; i++) {
-				for (int j = 0; j < column_Count; j++) {
-					FieldPojo fieldPojo = fields[j];
-					String fieldValue = data[i][j];
+				rowValue = BaseUtil.readAppointedLineNumber(reader, i);
+				fieldsArray = rowValue.split("\\|#\\|");
+				if (column_Count.equals(fieldsArray.length)) {
+					for (int j = 0; j < column_Count; j++) {
+						fieldPojo = fields[j];
+						fieldValue = fieldsArray[j];
+						// 非空校验
+						checkOutFlag = BaseUtil.isNull(fieldPojo, fieldValue);
+						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
+							errorCount++;
+							continue;
+						}
+						// 字段长度校验
+						checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
+						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
+									+ fieldValue + "\n");
+							errorCount++;
+							continue;
+						}
 
+						// 数字格式校验
+						if ("Number".equals(fieldPojo.getType())) {
+							checkOutFlag = BaseUtil.isNumber(fieldValue);
+							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+								errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+										+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
+										+ fieldValue + "\n");
+								errorCount++;
+							}
+							continue;
+						}
+
+						// 日期格式校验
+						if ("Date".equals(fieldPojo.getType())) {
+							checkOutFlag = BaseUtil.isDateTimeWithLongFormat(fieldValue);
+							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+								errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+										+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
+										+ fieldValue + "\n");
+								errorCount++;
+							}
+							continue;
+						}
+
+						// 邮箱格式校验
+						if ("Email".equals(fieldPojo.getType())) {
+							checkOutFlag = BaseUtil.isEmail(fieldValue);
+							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+								errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+										+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
+										+ fieldValue + "\n");
+								errorCount++;
+							}
+							continue;
+						}
+
+						// 手机号码格式校验
+						if ("Telephone".equals(fieldPojo.getType())) {
+							checkOutFlag = BaseUtil.isTelephoneNumber(fieldValue);
+							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
+								errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
+										+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
+										+ fieldValue + "\n");
+								errorCount++;
+							}
+							continue;
+						}
+
+					}
+
+					/*if (errorCount > 10000) {
+						return false;
+					}*/
+				} else if (1 == fieldsArray.length) {
 					// 空行校验
-					if (j == 0 && "|#|".equals(fieldValue)) {
-						checkOutFlag = "CHK010";
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
-							errorCount++;
-						}
-						break;
-					}
-
-					// 数据集字段数量不匹配
-					if (j != 0 && "|#|".equals(fieldValue)) {
-						checkOutFlag = "CHK007";
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
-							errorCount++;
-						}
-						continue;
-					}
-
-					// 非空校验
-					checkOutFlag = BaseUtil.isNull(fieldPojo, fieldValue);
+					checkOutFlag = "CHK010";
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 						errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
 								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 						errorCount++;
-						continue;
 					}
-					// 字段长度校验
-					checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
+					continue;
+				} else {
+					// 数据集字段数量不匹配
+					checkOutFlag = "CHK007";
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
 						errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue
-								+ "\n");
+								+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 						errorCount++;
-						continue;
 					}
-
-					// 数字格式校验
-					if ("Number".equals(fieldPojo.getType())) {
-						checkOutFlag = BaseUtil.isNumber(fieldValue);
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
-									+ fieldValue + "\n");
-							errorCount++;
-						}
-						continue;
-					}
-
-					// 日期格式校验
-					if ("Date".equals(fieldPojo.getType())) {
-						checkOutFlag = BaseUtil.isDateTimeWithLongFormat(fieldValue);
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
-									+ fieldValue + "\n");
-							errorCount++;
-						}
-						continue;
-					}
-
-					// 邮箱格式校验
-					if ("Email".equals(fieldPojo.getType())) {
-						checkOutFlag = BaseUtil.isEmail(fieldValue);
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
-									+ fieldValue + "\n");
-							errorCount++;
-						}
-						continue;
-					}
-
-					// 手机号码格式校验
-					if ("Telephone".equals(fieldPojo.getType())) {
-						checkOutFlag = BaseUtil.isTelephoneNumber(fieldValue);
-						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							errorMsg += (fileName + columnsTitleSplit + (i + 1) + columnsTitleSplit + checkOutFlag
-									+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit
-									+ fieldValue + "\n");
-							errorCount++;
-						}
-						continue;
-					}
-
+					continue;
 				}
-
-				if (errorCount > 10000) {
-					return false;
-				}
-
+				
 			}
+			
 			if (errorCount != 0) {
 				return false;
 			} else {
 				return true;
 			}
+
 		} catch (Exception e) {
 			logger.error(Level.ERROR, e);
 			return false;
@@ -390,5 +389,7 @@ public class ChainFileChecker {
 		}
 
 	}
+	
+	
 
 }
