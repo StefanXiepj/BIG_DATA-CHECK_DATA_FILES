@@ -72,7 +72,7 @@
 	"columnsTitle":"ID|#|TELPHONE|#|PROVICECODE|#|PROVICENAME|#|CITYNAME|#|BAND|#|BANDNAME|#|BANDCODE|#|EMAIL|#|GATHER_DAY",
 	"columnsTitleSplit":"|#|",
 	"fields":[
-		{"fieldName":"ID","isMust":"1","type":"String","length":"V10"},
+		{"fieldName":"ID","isMust":"1","type":"String","length":"V100"},
 		{"fieldName":"TELPHONE","isMust":"1","type":"Telephone","length":"V100"},
 		{"fieldName":"PROVICECODE","isMust":"1","type":"Number","length":"V100"},
 		{"fieldName":"PROVICENAME","isMust":"1","type":"String","length":"V100"},

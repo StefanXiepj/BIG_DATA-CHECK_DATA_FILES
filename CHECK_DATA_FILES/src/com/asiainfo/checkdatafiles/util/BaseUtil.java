@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.io.Writer;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,10 +38,23 @@ import com.asiainfo.checkdatafiles.pojo.FilePojo;
  * @version 1.0
  */
 public class BaseUtil {
+	
+	
+	Map<String,Writer> logMp = new ConcurrentHashMap<String, Writer>();
+	public Map<String, Writer> getLogMp() {
+		return logMp;
+	}
+
+	public void setLogMp(Map<String, Writer> logMp) {
+		this.logMp = logMp;
+	}
+
+	public void writeLogFile(){
+		
+	}
 
 	// 校验文件名
 	public static String isLegalFileName(FilePojo filePojo, String fileName) {
-
 		try {
 
 			Integer retryFlag = Integer.parseInt(filePojo.getRetryFlag());
@@ -212,22 +227,14 @@ public class BaseUtil {
 
 	// 获取指定行
 	public static String readAppointedLineNumber(LineNumberReader reader, int selectLineNumber) {
+		
+		reader.setLineNumber(selectLineNumber);
 		try {
-			String line = reader.readLine();
-			while (line != null) {
-			}
-			reader.setLineNumber(selectLineNumber);
-			String selectLine = reader.readLine();
-			return selectLine;
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return reader.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
-
-		return null;
 	}
 
 	// 获取总行数
@@ -244,6 +251,27 @@ public class BaseUtil {
 			}
 		}
 
+		is.close();
+		return count;
+	}
+	// 获取到指定行的字符数
+	public static long getFileAppointLinePointer(String filename,int lineNumber) throws IOException {
+		InputStream is = new BufferedInputStream(new FileInputStream(filename));
+		byte[] c = new byte[1024];
+		int count = 1;
+		int readChars = 0;
+		long charsCount = 0L;
+		while ((readChars = is.read(c)) != -1) {
+			for (int i = 0; i < readChars; ++i) {
+				charsCount++;
+				if (c[i] == '\n')
+					++count;
+				if(count == lineNumber){
+					return charsCount;
+				}
+			}
+		}
+		
 		is.close();
 		return count;
 	}
@@ -301,7 +329,7 @@ public class BaseUtil {
 				for (int y = 0; y < n - 1; y++) {
 					data[x][y] = column[y];
 				}
-				data[x][n-1] = "|#|";
+				data[x][n - 1] = "|#|";
 			} else {
 				for (int y = 0; y < n; y++) {
 					data[x][y] = "|#|";

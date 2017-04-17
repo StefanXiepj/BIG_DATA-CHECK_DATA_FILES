@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.List;
 
@@ -15,18 +16,43 @@ import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
-
-import org.apache.commons.io.FilenameUtils;
-import org.flame.check.FileCharsetDetector;
+import com.asiainfo.checkdatafiles.util.LineNumberConfigReader;
 
 public class TestMultiThreadDownLoad {
 	
-	
+	@Ignore	
 	@Test
-	public void testSplit(){
-		String value = "";
-		String[] split = value.split("\\|#\\|");
-		System.out.println(split.length);
+	public void testSplit() throws Exception{
+		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301000.txt.checking");
+/*		Reader in = new FileReader(checkingFile);
+		LineNumberConfigReader reader = new LineNumberConfigReader(in );
+		reader.setLineNumber(11);
+		String readLine = reader.readLine();
+		//readLine = reader.readLine();
+		int lineNumber = reader.getLineNumber();
+		System.out.println("lineNumber"+lineNumber);
+		System.out.println("readLine:");
+		System.out.println(readLine);
+			*/	
+		long readChars = BaseUtil.getFileAppointLinePointer(checkingFile.getAbsolutePath(), 10);
+		System.out.println("readChars"+readChars);
+		
+		RandomAccessFile randomAccessFile = new RandomAccessFile(checkingFile, "rw");
+		randomAccessFile.seek(readChars);
+		
+		String readLine10 = randomAccessFile.readLine();
+		String readLine11 = randomAccessFile.readLine();
+		String readLine12 = randomAccessFile.readLine();
+		String string10 = new String(readLine10.getBytes("8859_1"),"gbk");
+		String string11 = new String(readLine11.getBytes("8859_1"),"gbk");
+		String string12 = new String(readLine12.getBytes("8859_1"),"gbk");
+		System.out.println(string10);
+		System.out.println(string11);
+		System.out.println(string12);
+
+		
+		//String readAppointedLineNumber = BaseUtil.readAppointedLineNumber(reader , 5);
+		//System.out.println(readAppointedLineNumber);
 	}
 	@Ignore
 	@Test
@@ -103,7 +129,7 @@ public class TestMultiThreadDownLoad {
 		//BaseUtil.readAppointedLineNumber(reader, 8413340);
 		
 	}
-	@Ignore
+
 	@Test
 	public void testExecute1() throws Exception{
 		ChainFileChecker instance = ChainFileChecker.getInstance();
