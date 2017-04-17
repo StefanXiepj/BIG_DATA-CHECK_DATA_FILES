@@ -1,24 +1,21 @@
 package com.asiainfo.checkdatafiles.beltline;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.test.NextMultiThreadDownLoad.ChildThread;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 
 public class ChildThreadChecker extends Thread {
-	//校验状态码
+	// 校验状态码
 	public static final int STATUS_HASNOT_FINISHED = 0;
 	public static final int STATUS_HAS_FINISHED = 1;
-    public static final int STATUS_HTTPSTATUS_ERROR = 2;
+	public static final int STATUS_HTTPSTATUS_ERROR = 2;
 	private File checkingFile;
 	private Map<String, String> ERROR_CODE_MAP;
 	private FilePojo filePojo;
@@ -31,10 +28,10 @@ public class ChildThreadChecker extends Thread {
 	private Integer blockSize;
 	private CountDownLatch start;
 	private CountDownLatch end;
-	
-	//线程状态码  
-    private int status = ChildThread.STATUS_HASNOT_FINISHED;
-    private int errorCount = 0;
+
+	// 线程状态码
+	private int status = ChildThread.STATUS_HASNOT_FINISHED;
+	private int errorCount = 0;
 
 	public ChildThreadChecker() {
 		super();
@@ -54,7 +51,11 @@ public class ChildThreadChecker extends Thread {
 		this.blockSize = blockSize;
 		this.start = start;
 		this.end = end;
-		this.checkingFile= checkingFile;
+		this.checkingFile = checkingFile;
+	}
+
+	public synchronized int errorCounter() {
+		return errorCount++;
 	}
 
 	@Override
@@ -66,10 +67,9 @@ public class ChildThreadChecker extends Thread {
 		String checkOutFlag = "";
 		String rowValue;
 		FieldPojo fieldPojo;
-		
+
 		try {
 			start.await();
-
 
 			Integer column_Count = filePojo.getColumnsTitle().split("\\|#\\|").length;
 			String columnsTitleSplit = filePojo.getColumnsTitleSplit();
@@ -79,6 +79,7 @@ public class ChildThreadChecker extends Thread {
 			long readChars = BaseUtil.getFileAppointLinePointer(checkingFile.getAbsolutePath(), startRowNumber);
 			System.out.println("readChars" + readChars);
 
+			@SuppressWarnings("resource")
 			RandomAccessFile randomAccessFile = new RandomAccessFile(checkingFile, "rw");
 			randomAccessFile.seek(readChars);
 
@@ -93,15 +94,17 @@ public class ChildThreadChecker extends Thread {
 						// 非空校验
 						checkOutFlag = BaseUtil.isNull(fieldPojo, fieldValue);
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-							errorCount++;
+							writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,
+									fieldValue);
+							errorCounter();
 							continue;
 						}
 						// 字段长度校验
 						checkOutFlag = BaseUtil.isOverFieldLength(fieldValue, fieldPojo.getLength());
 						if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-							writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-							errorCount++;
+							writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,
+									fieldValue);
+							errorCounter();
 							continue;
 						}
 
@@ -109,8 +112,9 @@ public class ChildThreadChecker extends Thread {
 						if ("Number".equals(fieldPojo.getType())) {
 							checkOutFlag = BaseUtil.isNumber(fieldValue);
 							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-								errorCount++;
+								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg,
+										i + startRowNumber, fieldValue);
+								errorCounter();
 							}
 							continue;
 						}
@@ -119,8 +123,9 @@ public class ChildThreadChecker extends Thread {
 						if ("Date".equals(fieldPojo.getType())) {
 							checkOutFlag = BaseUtil.isDateTimeWithLongFormat(fieldValue);
 							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-								errorCount++;
+								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg,
+										i + startRowNumber, fieldValue);
+								errorCounter();
 							}
 							continue;
 						}
@@ -129,8 +134,9 @@ public class ChildThreadChecker extends Thread {
 						if ("Email".equals(fieldPojo.getType())) {
 							checkOutFlag = BaseUtil.isEmail(fieldValue);
 							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-								errorCount++;
+								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg,
+										i + startRowNumber, fieldValue);
+								errorCounter();
 							}
 							continue;
 						}
@@ -139,73 +145,85 @@ public class ChildThreadChecker extends Thread {
 						if ("Telephone".equals(fieldPojo.getType())) {
 							checkOutFlag = BaseUtil.isTelephoneNumber(fieldValue);
 							if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,fieldValue);
-								errorCount++;
+								writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg,
+										i + startRowNumber, fieldValue);
+								errorCounter();
 							}
 							continue;
 						}
 
 					}
 
-					/*
-					 * if (errorCount > 10000) { return false; }
-					 */
 				} else if (1 == fieldsArray.length) {
 					// 空行校验
 					checkOutFlag = "CHK010";
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-						writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,"");
-						errorCount++;
+						writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,
+								"");
+						errorCounter();
 					}
 					continue;
 				} else {
 					// 数据集字段数量不匹配
 					checkOutFlag = "CHK007";
 					if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-						writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,"");
-						errorCount++;
+						writeLogMsg(writer, checkOutFlag, fileName, columnsTitleSplit, errorMsg, i + startRowNumber,
+								"");
+						errorCounter();
 					}
 					continue;
 				}
+				if (errorCount > 10000) {
+					break;
+				}
 			}
-			
-			if(errorCount > 0){
+
+			// 日志输出
+			System.out.println(this.getName() + "的错误信息大小为：" + errorMsg.length());
+			System.out.println(this.getName() + "的错误信息数量为：" + errorCount);
+			writer.write(errorMsg.getBytes());
+			writer.flush();
+
+			if (errorCount > 0) {
 				status = ChildThread.STATUS_HASNOT_FINISHED;
 			}
 			end.countDown();
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}finally{
-			if(writer != null){
+		} finally {
+			if (writer != null) {
 				try {
 					writer.close();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 	}
 
 	public void writeLogMsg(FileOutputStream writer, String checkOutFlag, String fileName, String columnsTitleSplit,
-			String errorMsg, int errorRowNumber,String fieldValue) {
+			String errorMsg, int errorRowNumber, String fieldValue) {
 
 		if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
-			errorMsg += (fileName + columnsTitleSplit + errorRowNumber + columnsTitleSplit + checkOutFlag + columnsTitleSplit
-					+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
+			errorMsg += (fileName + columnsTitleSplit + errorRowNumber + columnsTitleSplit + checkOutFlag
+					+ columnsTitleSplit + ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + fieldValue + "\n");
 		}
 
-		if (errorMsg.length() > 1024*1024) {
-				try {
-					writer.write(errorMsg.getBytes());
-					errorMsg = "";
-					writer.flush();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		// System.out.println(this.getName()+":"+errorMsg);
+
+		// 如果错误信息累计至1024*1024，则写入log日志
+		if (errorMsg.length() > 1024 * 1024) {
+			try {
+				writer.write(errorMsg.getBytes());
+				errorMsg = "";
+				writer.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -48,7 +48,7 @@ public class MultiThreadDownLoad {
         logger.log(Level.INFO, "charset = ----"+charset);
         logger.log(Level.INFO, "fileDir = ----"+fileDir);
         logger.log(Level.INFO, "threadNum = ----"+threadNum);
-        try {  
+        try {
             // 从url中获得下载的文件格式与名字  
             this.fileName = urlStr.substring(urlStr.lastIndexOf("/") + 1, urlStr.lastIndexOf("?")>0 ? urlStr.lastIndexOf("?") : urlStr.length());  
             if("".equalsIgnoreCase(this.fileName)){  
@@ -213,7 +213,7 @@ public class MultiThreadDownLoad {
     }
     
     
-    public class ChildThread extends Thread {  
+    public class ChildThread extends Thread {
         public static final int STATUS_HASNOT_FINISHED = 0;  
         public static final int STATUS_HAS_FINISHED = 1;  
         public static final int STATUS_HTTPSTATUS_ERROR = 2;  
@@ -288,7 +288,7 @@ public class MultiThreadDownLoad {
                                     + con.getResponseCode() + ", status = "  
                                     + con.getResponseMessage());
                             status = ChildThread.STATUS_HTTPSTATUS_ERROR;  
-                            this.task.statusError = true;  
+                            this.task.statusError = true;
                             outputStream.close();  
                             con.disconnect();  
                             logger.log(Level.INFO, "Thread " + id + " finished.");

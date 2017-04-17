@@ -1,22 +1,18 @@
 package com.asiainfo.checkdatafiles.test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
 import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
-import com.asiainfo.checkdatafiles.util.LineNumberConfigReader;
 
 public class TestMultiThreadDownLoad {
 	
@@ -132,8 +128,6 @@ public class TestMultiThreadDownLoad {
 
 	@Test
 	public void testExecute1() throws Exception{
-		ChainFileChecker instance = ChainFileChecker.getInstance();
-		instance.execute();
 		
 	}
 	@Ignore	
