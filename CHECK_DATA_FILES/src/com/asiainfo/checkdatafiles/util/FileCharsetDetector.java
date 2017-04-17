@@ -44,7 +44,7 @@ public class FileCharsetDetector {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public String guessFileEncoding(File file, int languageHint) throws FileNotFoundException, IOException {
+    public  String guessFileEncoding(File file, int languageHint) throws FileNotFoundException, IOException {
         return guessFileEncoding(file, new nsDetector(languageHint));
     }
 

@@ -30,7 +30,7 @@ public class ChildThreadChecker extends Thread {
 	private CountDownLatch end;
 
 	// Ïß³Ì×´Ì¬Âë
-	private int status = ChildThread.STATUS_HASNOT_FINISHED;
+	private int status = ChildThread.STATUS_HASNO_ERROR;
 	private int errorCount = 0;
 
 	public ChildThreadChecker() {
@@ -185,7 +185,7 @@ public class ChildThreadChecker extends Thread {
 			writer.flush();
 
 			if (errorCount > 0) {
-				status = ChildThread.STATUS_HASNOT_FINISHED;
+				status = ChildThread.STATUS_HASNO_ERROR;
 			}
 			end.countDown();
 		} catch (Exception e1) {

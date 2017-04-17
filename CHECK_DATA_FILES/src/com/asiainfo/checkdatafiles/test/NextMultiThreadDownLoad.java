@@ -180,7 +180,7 @@ public class NextMultiThreadDownLoad {
       
                 inputStream.close();  
                 // 删除临时文件  
-                if (childThreads[i].status == ChildThread.STATUS_HAS_FINISHED) {  
+                if (childThreads[i].status == ChildThread.STATUS_HAS_ERROR) {  
                     childThreads[i].tempFile.delete();  
                 }  
             }  
@@ -212,9 +212,9 @@ public class NextMultiThreadDownLoad {
     
     
     public class ChildThread extends Thread {  
-        public static final int STATUS_HASNOT_FINISHED = 0;  
-        public static final int STATUS_HAS_FINISHED = 1;  
-        public static final int STATUS_HTTPSTATUS_ERROR = 2;  
+        public static final int STATUS_HASNO_ERROR = 0;  
+        public static final int STATUS_HAS_ERROR = 1;  
+        public static final int STATUS_JAVA_EXCEPTION = 2;
         private NextMultiThreadDownLoad task;  
         private int id;  
         private long startPosition;  
@@ -223,7 +223,7 @@ public class NextMultiThreadDownLoad {
         // private RandomAccessFile tempFile = null;  
         private File tempFile = null;  
         //线程状态码  
-        private int status = ChildThread.STATUS_HASNOT_FINISHED;  
+        private int status = ChildThread.STATUS_HASNO_ERROR;  
       
         public ChildThread(NextMultiThreadDownLoad task, CountDownLatch latch, int id, long startPos, long endPos) {  
             super();  
@@ -239,7 +239,8 @@ public class NextMultiThreadDownLoad {
                     tempFile.createNewFile();  
                 }  
             } catch (IOException e) {  
-                e.printStackTrace();  
+                e.printStackTrace();
+                this.status = ChildThread.STATUS_JAVA_EXCEPTION;
             }  
       
         }  
@@ -255,7 +256,8 @@ public class NextMultiThreadDownLoad {
             try {  
                 outputStream = new BufferedOutputStream(new FileOutputStream(tempFile.getPath(), true));  
             } catch (FileNotFoundException e2) {  
-                e2.printStackTrace();  
+                e2.printStackTrace();
+                this.status = ChildThread.STATUS_JAVA_EXCEPTION;
             }  
               
             for(int k = 0; k < 10; k++){  
@@ -285,7 +287,7 @@ public class NextMultiThreadDownLoad {
                         	logger.log(Level.INFO, "Thread " + id + ": code = "  
                                     + con.getResponseCode() + ", status = "  
                                     + con.getResponseMessage());
-                            status = ChildThread.STATUS_HTTPSTATUS_ERROR;  
+                            status = ChildThread.STATUS_JAVA_EXCEPTION;  
                             this.task.statusError = true;  
                             outputStream.close();  
                             con.disconnect();  
@@ -310,14 +312,14 @@ public class NextMultiThreadDownLoad {
       
                         System.out.println("count is " + count);   
                         if (count >= threadDownloadLength) {  
-                            status = ChildThread.STATUS_HAS_FINISHED;  
+                            status = ChildThread.STATUS_HAS_ERROR;  
                         }  
                         outputStream.flush();  
                         outputStream.close();  
                         inputStream.close();  
                         con.disconnect();  
                     } else {  
-                        status = ChildThread.STATUS_HAS_FINISHED;  
+                        status = ChildThread.STATUS_HAS_ERROR;  
                     }  
       
                     System.out.println("Thread " + id + " finished.");  

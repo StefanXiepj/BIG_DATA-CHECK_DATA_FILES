@@ -1,5 +1,5 @@
 {	
-	"INTERFACE_LIST":["BUS10010","BUS10152","BUS10151"],
+	"ERROR_THRESHOLD":10,
 	"SRC_FILE_PATH":"D:\\download\\file\\",
 	"ERROR_LOG_PATH": "D:\\download\\log\\",
 	"ERROR_COLUMNS_TITLE": "file_name|#|file_row|#|error_code|#|error_msg",

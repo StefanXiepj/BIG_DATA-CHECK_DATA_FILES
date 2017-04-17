@@ -13,13 +13,17 @@ import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
+import com.asiainfo.checkdatafiles.util.FileCharsetDetector;
 
 public class TestMultiThreadDownLoad {
 	
-	@Ignore	
+
 	@Test
 	public void testSplit() throws Exception{
-		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301000.txt.checking");
+		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301003.txt.checking");
+		FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
+		String guessFileEncoding = fileCharsetDetector.guessFileEncoding(checkingFile, 2);
+		System.out.println(guessFileEncoding);
 /*		Reader in = new FileReader(checkingFile);
 		LineNumberConfigReader reader = new LineNumberConfigReader(in );
 		reader.setLineNumber(11);
@@ -30,7 +34,7 @@ public class TestMultiThreadDownLoad {
 		System.out.println("readLine:");
 		System.out.println(readLine);
 			*/	
-		long readChars = BaseUtil.getFileAppointLinePointer(checkingFile.getAbsolutePath(), 10);
+		/*long readChars = BaseUtil.getFileAppointLinePointer(checkingFile.getAbsolutePath(), 10);
 		System.out.println("readChars"+readChars);
 		
 		RandomAccessFile randomAccessFile = new RandomAccessFile(checkingFile, "rw");
@@ -44,7 +48,7 @@ public class TestMultiThreadDownLoad {
 		String string12 = new String(readLine12.getBytes("8859_1"),"gbk");
 		System.out.println(string10);
 		System.out.println(string11);
-		System.out.println(string12);
+		System.out.println(string12);*/
 
 		
 		//String readAppointedLineNumber = BaseUtil.readAppointedLineNumber(reader , 5);
@@ -125,7 +129,7 @@ public class TestMultiThreadDownLoad {
 		//BaseUtil.readAppointedLineNumber(reader, 8413340);
 		
 	}
-
+	@Ignore	
 	@Test
 	public void testExecute1() throws Exception{
 		
