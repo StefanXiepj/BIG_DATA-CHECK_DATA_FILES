@@ -188,7 +188,7 @@ public class ChainFileChecker {
 		// 第五步，校验完毕，更改文件状态
 		String checkedName = SRC_FILE_PATH + fileName + ".checked";
 
-		File target = new File(checkedName);
+		/*File target = new File(checkedName);
 		if (target.exists()) { //新文件若存在，则删掉
 		  target.delete();
 		}
@@ -204,7 +204,11 @@ public class ChainFileChecker {
 			} catch (IOException e) {
 				System.out.println("Failed to rename ["+fileName+"] to ["+checkedName+"].");
 			}
-		}
+		}*/
+		
+		boolean renameTo = checkingFile.renameTo(file);
+		
+		if(renameTo){System.out.println("重命名成功");}else{System.out.println("重命名失败");}
 		
 		long endTimeMillis = System.currentTimeMillis();
 		System.out.println(fileName + " 校验所用时长为：" + (endTimeMillis - startTimeMillis));
