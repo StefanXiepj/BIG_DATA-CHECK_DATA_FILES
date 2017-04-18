@@ -44,48 +44,79 @@ import com.google.gson.JsonSyntaxException;
  */
 public class ChainFileChecker {
 
-	private static volatile ChainFileChecker instance = null;
+	private  volatile static ChainFileChecker instance = null;
 
-	private static String SRC_FILE_PATH;
-	private static String ERROR_LOG_PATH;
-	private static String ERROR_COLUMNS_TITLE;
-	private static Map<String, String> ERROR_CODE_MAP;
+	private Integer THREAD_NUM;
+	private String SRC_FILE_PATH;
+	private String ERROR_LOG_PATH;
+	private String ERROR_COLUMNS_TITLE;
+	private Map<String, String> ERROR_CODE_MAP;
 	private static Map<String, FilePojo> FILE_POJO_MAP;
-	private static String ERROR_THRESHOLD;
+	private Integer ERROR_THRESHOLD;
 
-	// 双锁单例模式
-	private ChainFileChecker() {
+	public void setTHREAD_NUM(Integer tHREAD_NUM) {
+		THREAD_NUM = tHREAD_NUM;
+	}
+	
+	public void setSRC_FILE_PATH(String sRC_FILE_PATH) {
+		SRC_FILE_PATH = sRC_FILE_PATH;
 	}
 
-	public static ChainFileChecker getInstance() {
+	public void setERROR_LOG_PATH(String eRROR_LOG_PATH) {
+		ERROR_LOG_PATH = eRROR_LOG_PATH;
+	}
+
+	public void setERROR_COLUMNS_TITLE(String eRROR_COLUMNS_TITLE) {
+		ERROR_COLUMNS_TITLE = eRROR_COLUMNS_TITLE;
+	}
+
+	public void setERROR_CODE_MAP(Map<String, String> eRROR_CODE_MAP) {
+		ERROR_CODE_MAP = eRROR_CODE_MAP;
+	}
+
+	public void setERROR_THRESHOLD(Integer eRROR_THRESHOLD) {
+		ERROR_THRESHOLD = eRROR_THRESHOLD;
+	}
+
+	// 无参构造方法
+	public ChainFileChecker() {
+	}
+
+	// 游蚕构造方法
+	public ChainFileChecker(String initPath) {
+		FileInputStream configIn = null;
+		try {
+			configIn = new FileInputStream(initPath);
+			byte[] buf = new byte[1024];
+			String initConfig = "";
+			int length = 0;
+			while ((length = configIn.read(buf)) != -1) {
+				initConfig += new String(buf, 0, length);
+			}
+
+			instance = JSON.parseObject(initConfig, ChainFileChecker.class);
+
+			FILE_POJO_MAP = new HashMap<String, FilePojo>();
+			List<FilePojo> filePojoList = FilePojo.getInstance();
+			for (FilePojo filePojo : filePojoList) {
+				FILE_POJO_MAP.put(filePojo.getInterfaceName(), filePojo);
+			}
+
+		} catch (JsonSyntaxException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			IOUtils.closeQuietly(configIn);
+		}
+	}
+
+	// 双锁单例模式
+	public static  ChainFileChecker getInstance() {
 		if (instance == null) {
 			synchronized (ChainFileChecker.class) {
 				if (instance == null) {
-					FileInputStream configIn = null;
-					try {
-						configIn = new FileInputStream("conf\\__init__.json");
-						byte[] buf = new byte[1024];
-						String initConfig = "";
-						int length = 0;
-						while ((length = configIn.read(buf)) != -1) {
-							initConfig += new String(buf, 0, length);
-						}
-
-						instance = JSON.parseObject(initConfig, ChainFileChecker.class);
-
-						FILE_POJO_MAP = new HashMap<String, FilePojo>();
-						List<FilePojo> filePojoList = FilePojo.getInstance();
-						for (FilePojo filePojo : filePojoList) {
-							FILE_POJO_MAP.put(filePojo.getInterfaceName(), filePojo);
-						}
-
-					} catch (JsonSyntaxException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} finally {
-						IOUtils.closeQuietly(configIn);
-					}
+					instance = new ChainFileChecker();
 				}
 			}
 		}
@@ -101,12 +132,12 @@ public class ChainFileChecker {
 	// 字段实体
 	private FieldPojo[] fieldPojos;
 	// 错误计数器
-	private int errorCount = 0;
+	private int errorCount;
 	// 文件最后上传时间
 	private long lastModified;
 	// 当前系统内核数
 	private int core;
-	private boolean statusError = false;
+	private boolean statusError;
 
 	private Logger logger = Logger.getLogger(ChainFileChecker.class);
 
@@ -139,13 +170,21 @@ public class ChainFileChecker {
 		}
 	}
 
-
 	// 执行校验
-	public void execute(File file) throws Exception {
+	public void executeCheck(File file) throws Exception {
 
 		long startTimeMillis = System.currentTimeMillis();
 
-		this.fileName = file.getName();
+		//初始化参数
+		this.fileName = null;
+		this.filePojo = null;
+		this.checkingFile = null;
+		this.fieldPojos = null;
+		this.errorCount = 0;
+		this.lastModified = 0L;
+		this.core = 0;
+		this.statusError = false;
+		
 		// 第一步，过滤掉正在上传已校验以及正在校验的文件
 		if (!file.exists() || !file.isFile()) {
 			logger.info(file.getName() + " doesn't exist or is not a file");
@@ -160,7 +199,9 @@ public class ChainFileChecker {
 		if (file.getName().endsWith(".checked")) {
 			return;
 		}
-
+		
+		this.fileName = file.getName();
+		
 		// 第二步，文件校验状态修改
 		this.lastModified = file.lastModified();
 		this.checkingFile = new File(file.getAbsolutePath() + ".checking");
@@ -199,30 +240,15 @@ public class ChainFileChecker {
 		// 第五步，校验完毕，更改文件状态
 		String checkedName = SRC_FILE_PATH + fileName + ".checked";
 
-		/*File target = new File(checkedName);
-		if (target.exists()) { //新文件若存在，则删掉
-		  target.delete();
+		boolean renameTo = checkingFile.renameTo(new File(checkedName));
+
+		if (renameTo) {
+			System.out.println("重命名成功");
+		} else {
+			System.out.println("重命名失败");
 		}
-		boolean result = checkingFile.renameTo(target); //将旧文件更名
-		if(result) {
-			System.out.println(fileName +" -> "+ checkedName);
-		} else { //更名失败，则采取变相的更名方法
-			try{
-				FileUtils.copyFile(file, target); // 将旧文件拷贝给新文件
-				System.out.println(fileName +" -> "+ checkedName);
-				//清空旧文件
-				emptyFileContent(file);
-			} catch (IOException e) {
-				System.out.println("Failed to rename ["+fileName+"] to ["+checkedName+"].");
-			}
-		}*/
-		
-		boolean renameTo = checkingFile.renameTo(file);
-		
-		if(renameTo){System.out.println("重命名成功");}else{System.out.println("重命名失败");}
-		
+
 		long endTimeMillis = System.currentTimeMillis();
-		System.out.println("ERROR_THRESHOLD:"+ERROR_THRESHOLD);
 		System.out.println(fileName + " 校验所用时长为：" + (endTimeMillis - startTimeMillis));
 	}
 
@@ -279,7 +305,7 @@ public class ChainFileChecker {
 				errorMsg += (fileName + columnsTitleSplit + "0" + columnsTitleSplit + checkOutFlag + columnsTitleSplit
 						+ ERROR_CODE_MAP.get(checkOutFlag) + columnsTitleSplit + "\n");
 				errorCounter();
-				//return;
+				// return;
 
 			}
 
@@ -288,12 +314,16 @@ public class ChainFileChecker {
 
 			// 总行数
 			Integer row_count = BaseUtil.totalLines(checkingFile.getAbsolutePath());
+			System.out.println("row_count:"+row_count);
 			// 首行值
 			String readAppointedLineNumber = BaseUtil.readAppointedLineNumber(reader, 0);
 			Integer topRowValue = Integer.parseInt(readAppointedLineNumber);
 			// 第二行值
 			String secondRowValue = BaseUtil.readAppointedLineNumber(reader, 1);
-
+			
+			IOUtils.closeQuietly(in);
+			IOUtils.closeQuietly(reader);
+			
 			// 文件记录行数校验
 			checkOutFlag = BaseUtil.isRowsEqual(topRowValue, row_count);
 			if (ERROR_CODE_MAP.get(checkOutFlag) != null) {
@@ -313,21 +343,27 @@ public class ChainFileChecker {
 			// 数据集校验
 			Integer startRowNumber;
 			core = Runtime.getRuntime().availableProcessors();
+			if(row_count < 10000){
+				THREAD_NUM = 1;
+			}else if(0 == THREAD_NUM || "".equals(THREAD_NUM) || THREAD_NUM == null){
+				THREAD_NUM = core;
+			}
+			
 			CountDownLatch start = new CountDownLatch(1);
-			CountDownLatch end = new CountDownLatch(core);
-			ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(core, core + 1, 10, TimeUnit.SECONDS,
+			CountDownLatch end = new CountDownLatch(THREAD_NUM);
+			ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(THREAD_NUM, THREAD_NUM + 1, 10, TimeUnit.SECONDS,
 					new ArrayBlockingQueue<Runnable>(10));
 
-			System.out.println("core:" + core);
-			int blockSize = row_count / core;
-			childThreadChecker = new ChildThreadChecker[core];
+			System.out.println("THREAD_NUM:" + THREAD_NUM);
+			int blockSize = row_count / THREAD_NUM;
+			childThreadChecker = new ChildThreadChecker[THREAD_NUM];
 
-			for (int i = 0; i < core; i++) {
+			for (int i = 0; i < THREAD_NUM; i++) {
 				System.out.println("线程" + i + "准备就绪");
 
 				startRowNumber = 3 + i * blockSize;
 				System.out.println("startRowNumber:" + startRowNumber);
-				if (i == (core - 1)) {
+				if (i == (THREAD_NUM - 1)) {
 					blockSize = row_count - startRowNumber + 1;
 				}
 				ChildThreadChecker checker = new ChildThreadChecker(this, i, startRowNumber, blockSize, start, end);
@@ -357,8 +393,8 @@ public class ChainFileChecker {
 		try {
 			if (errorCount > 0) {
 				BufferedOutputStream outputStream = null;
-				File errorFile = new File(ChainFileChecker.ERROR_LOG_PATH + fileName.substring(0, 37) + "999.txt.error");
-				if(errorFile.exists()){
+				File errorFile = new File(ERROR_LOG_PATH + fileName.substring(0, 37) + "999.txt.error");
+				if (errorFile.exists()) {
 					errorFile.delete();
 					errorFile.createNewFile();
 				}
@@ -370,13 +406,13 @@ public class ChainFileChecker {
 					outputStream.write((ERROR_COLUMNS_TITLE + filePojo.getColumnsTitle()).getBytes());
 					outputStream.write(13);
 					outputStream.write(errorMsg.getBytes());
-					//outputStream.write(13);
+					// outputStream.write(13);
 				}
 
 				// 遍历所有子线程创建的临时文件，按顺序把下载内容写入目标文件中
-				for (int i = 0; i < core; i++) {
+				for (int i = 0; i < THREAD_NUM; i++) {
 					if (statusError) {
-						for (int k = 0; k < core; k++) {
+						for (int k = 0; k < THREAD_NUM; k++) {
 							childThreadChecker[k].tmpLogFile.delete();
 						}
 						logger.log(Level.INFO, fileName + "----校验异常。");
@@ -385,7 +421,6 @@ public class ChainFileChecker {
 
 					BufferedInputStream inputStream = new BufferedInputStream(
 							new FileInputStream(childThreadChecker[i].tmpLogFile));
-					logger.log(Level.INFO, "Now is file " + childThreadChecker[i].id);
 					int len = 0;
 					long count = 0;
 					byte[] b = new byte[1024];
@@ -407,12 +442,10 @@ public class ChainFileChecker {
 				}
 
 				outputStream.flush();
-				outputStream.close();
+				IOUtils.closeQuietly(outputStream);
 			}
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -450,7 +483,7 @@ public class ChainFileChecker {
 			this.end = end;
 
 			try {
-				tmpLogFile = new File(ChainFileChecker.ERROR_LOG_PATH + fileName.substring(0, 37) + "999.txt.log" + id);
+				tmpLogFile = new File(ERROR_LOG_PATH + fileName.substring(0, 37) + "999.txt.log" + id);
 				if (tmpLogFile.exists()) {
 					tmpLogFile.delete();
 					tmpLogFile.createNewFile();
@@ -591,16 +624,15 @@ public class ChainFileChecker {
 						errorMsg = "";
 					}
 
-					if (errorCount > 10000) {
+					if (errorCount > ERROR_THRESHOLD) {
 						break;
 					}
 
 				}
 
 				// 日志输出
-				System.out.println(this.getName() + "的错误信息数量为：" + errorCount);
-
 				writeLogMsg(writer, errorMsg);
+				
 				if (errorCount > 0) {
 					status = ChildThread.STATUS_HAS_ERROR;
 				}
@@ -610,27 +642,17 @@ public class ChainFileChecker {
 				this.status = ChildThreadChecker.STATUS_HAS_EXCEPTION;
 				this.task.statusError = false;
 			} finally {
-				if (writer != null) {
-					try {
-						writer.flush();
-						writer.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-						this.status = ChildThreadChecker.STATUS_HAS_EXCEPTION;
-						this.task.statusError = false;
-					}
+				try {
+					writer.flush();
+					IOUtils.closeQuietly(writer);
+					IOUtils.closeQuietly(randomAccessFile);
+					System.out.println("writer 已关闭");
+				} catch (IOException e) {
+					e.printStackTrace();
+					this.status = ChildThreadChecker.STATUS_HAS_EXCEPTION;
+					this.task.statusError = false;
+				}
 
-				}
-				
-				if( randomAccessFile !=null){
-					try {
-						randomAccessFile.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-						this.status = ChildThreadChecker.STATUS_HAS_EXCEPTION;
-						this.task.statusError = false;
-					}
-				}
 			}
 		}
 
@@ -648,67 +670,14 @@ public class ChainFileChecker {
 
 	// 错误计数器
 	public synchronized int errorCounter() {
-
 		return ChainFileChecker.this.errorCount++;
 	}
-	
-	/** 清空文件内容 */
-	public static void emptyFileContent(File file) {
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(file);
-			out.write(new byte[0]);
-		} catch (Exception e) {
-			System.out.println("Can't not empty " + file.getName());
-		} finally {
-			IOUtils.closeQuietly(out);
-		}
-	}
 
-	public void setSRC_FILE_PATH(String sRC_FILE_PATH) {
-		SRC_FILE_PATH = sRC_FILE_PATH;
+	@Override
+	public String toString() {
+		return "ChainFileChecker [SRC_FILE_PATH=" + SRC_FILE_PATH + ", ERROR_LOG_PATH=" + ERROR_LOG_PATH
+				+ ", ERROR_COLUMNS_TITLE=" + ERROR_COLUMNS_TITLE + ", ERROR_CODE_MAP=" + ERROR_CODE_MAP
+				+ ", ERROR_THRESHOLD=" + ERROR_THRESHOLD + "]";
 	}
-
-	public void setERROR_LOG_PATH(String eRROR_LOG_PATH) {
-		ERROR_LOG_PATH = eRROR_LOG_PATH;
-	}
-
-	public void setERROR_COLUMNS_TITLE(String eRROR_COLUMNS_TITLE) {
-		ERROR_COLUMNS_TITLE = eRROR_COLUMNS_TITLE;
-	}
-
-	public void setERROR_CODE_MAP(Map<String, String> eRROR_CODE_MAP) {
-		ERROR_CODE_MAP = eRROR_CODE_MAP;
-	}
-
-	public static void setFilePojoMap(Map<String, FilePojo> fILE_POJO_MAP) {
-		ChainFileChecker.FILE_POJO_MAP = fILE_POJO_MAP;
-	}
-	
-	public static void setERROR_THRESHOLD(String eRROR_THRESHOLD) {
-		ERROR_THRESHOLD = eRROR_THRESHOLD;
-	}
-
-	public static String getSRC_FILE_PATH() {
-		return SRC_FILE_PATH;
-	}
-
-	public static String getERROR_LOG_PATH() {
-		return ERROR_LOG_PATH;
-	}
-
-	public static String getERROR_COLUMNS_TITLE() {
-		return ERROR_COLUMNS_TITLE;
-	}
-
-	public static Map<String, String> getERROR_CODE_MAP() {
-		return ERROR_CODE_MAP;
-	}
-
-	public static String getERROR_THRESHOLD() {
-		return ERROR_THRESHOLD;
-	}
-	
-	
 
 }

@@ -1,36 +1,43 @@
 package com.asiainfo.checkdatafiles.test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.alibaba.fastjson.JSON;
 import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 import com.asiainfo.checkdatafiles.util.FileCharsetDetector;
+import com.google.gson.JsonSyntaxException;
 
 public class TestMultiThreadDownLoad {
 	
-
+	@Ignore
 	@Test
 	public void testSplit() throws Exception{
-/*		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301003.txt.checking");
-		FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
+		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305303002.txt.checking");
+		/*FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
 		String guessFileEncoding = fileCharsetDetector.guessFileEncoding(checkingFile, 2);
 		System.out.println(guessFileEncoding);*/
 		
-		ChainFileChecker instance = ChainFileChecker.getInstance();
-		
-		System.out.println(instance.getERROR_THRESHOLD());
-		System.out.println(instance.getERROR_LOG_PATH());
-		
-		
+		File checkedFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305303002.txt.checked");
+		boolean renameTo = checkingFile.renameTo(checkedFile);
+		System.out.println(renameTo);
+		System.out.println(checkingFile.getAbsolutePath());
+		System.out.println(checkedFile.getAbsolutePath());
+
 
 			/*// 获取校验路径下所有文件集,并校验
 			File files = new File(SRC_FILE_PATH);
@@ -78,16 +85,7 @@ public class TestMultiThreadDownLoad {
 	@Ignore
 	@Test
 	public void testExecute() throws Exception{
-	/*	File files = new File("D:\\download\\file\\");
-		File[] listFiles = files.listFiles();
-		for (File file : listFiles) {
-			String path = file.getAbsolutePath();
-			System.out.println(path);
-			
-			String name = file.getName();
-			
-			System.out.println(name);
-		}*/
+		
 		
 		
 		/*String fileName = "A0000059A8A362|#|18004788309|#|460036940781255|#|内蒙古|#|巴彦淖尔|#|华为|#|HW-KIW CL00|#|KIW-CL00C92B437|#|2017-03-22 00:00:08";
@@ -132,11 +130,10 @@ public class TestMultiThreadDownLoad {
 		
 		long endTimeMillis1 = System.currentTimeMillis();
 		Reader in = new FileReader(fileName);
-		@SuppressWarnings("resource")
 		LineNumberReader reader = new LineNumberReader(in);
 		String s = reader.readLine();    
         int lines = 0;    
-        while (s != null) {    
+        while (s != null) {
             lines++;    
             s = reader.readLine();    
         }
@@ -150,10 +147,16 @@ public class TestMultiThreadDownLoad {
 		//BaseUtil.readAppointedLineNumber(reader, 8413340);
 		
 	}
-	@Ignore	
 	@Test
 	public void testExecute1() throws Exception{
-		
+		File files = new File("D:\\download\\file\\");
+		File[] listFiles = files.listFiles();
+		ChainFileChecker instance;
+		for (File file : listFiles) {
+			instance = ChainFileChecker.getInstance();
+			instance.executeCheck(file);
+			instance = null;
+		}
 	}
 	@Ignore	
 	@Test

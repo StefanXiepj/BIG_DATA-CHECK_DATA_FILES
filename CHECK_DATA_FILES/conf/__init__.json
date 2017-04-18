@@ -1,4 +1,5 @@
 {	
+	"THREAD_NUM":"0",
 	"ERROR_THRESHOLD":"100000",
 	"SRC_FILE_PATH":"D:\\download\\file\\",
 	"ERROR_LOG_PATH": "D:\\download\\log\\",
