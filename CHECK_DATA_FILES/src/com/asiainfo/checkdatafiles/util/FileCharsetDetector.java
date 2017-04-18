@@ -68,7 +68,7 @@ public class FileCharsetDetector {
         });
 
         BufferedInputStream imp = new BufferedInputStream(new FileInputStream(file));
-        byte[] buf = new byte[1024];
+        byte[] buf = new byte[2048];
         int len;
         boolean done = false;
         boolean isAscii = false;

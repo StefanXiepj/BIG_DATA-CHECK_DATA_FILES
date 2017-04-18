@@ -1,5 +1,5 @@
 {	
-	"ERROR_THRESHOLD":10,
+	"ERROR_THRESHOLD":100000,
 	"SRC_FILE_PATH":"D:\\download\\file\\",
 	"ERROR_LOG_PATH": "D:\\download\\log\\",
 	"ERROR_COLUMNS_TITLE": "file_name|#|file_row|#|error_code|#|error_msg",

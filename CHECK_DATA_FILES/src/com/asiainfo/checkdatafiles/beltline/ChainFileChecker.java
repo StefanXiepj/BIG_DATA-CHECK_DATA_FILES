@@ -20,15 +20,17 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.flame.check.FileCharsetDetector;
 import com.alibaba.fastjson.JSON;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.test.NextMultiThreadDownLoad.ChildThread;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
+import com.asiainfo.checkdatafiles.util.FileCharsetDetector;
 import com.asiainfo.checkdatafiles.util.LineNumberConfigReader;
 import com.google.gson.JsonSyntaxException;
 
@@ -168,9 +170,9 @@ public class ChainFileChecker {
 		if ("NAME_ENCODING_COUNT_FIELD".equals(checkLevel)) {
 			checker(filePojo, checkingFile);
 			if (statusError) {
-				logger.info(fileName + " is a Legal File!!!");
+				logger.info(fileName + ": Legal File!!!");
 			} else {
-				logger.info(fileName + " is a Illegal File!!!");
+				logger.info(fileName + ": Illegal File!!!");
 			}
 		}
 		if ("ENCODING_COUNT_FIELD".equals(checkLevel)) {
@@ -184,7 +186,26 @@ public class ChainFileChecker {
 		}
 
 		// 第五步，校验完毕，更改文件状态
-		checkingFile.renameTo(new File(checkingFile.getAbsolutePath().replaceAll("checking", "checked")));
+		String checkedName = SRC_FILE_PATH + fileName + ".checked";
+
+		File target = new File(checkedName);
+		if (target.exists()) { //新文件若存在，则删掉
+		  target.delete();
+		}
+		boolean result = checkingFile.renameTo(target); //将旧文件更名
+		if(result) {
+			System.out.println(fileName +" -> "+ checkedName);
+		} else { //更名失败，则采取变相的更名方法
+			try{
+				FileUtils.copyFile(file, target); // 将旧文件拷贝给新文件
+				System.out.println(fileName +" -> "+ checkedName);
+				//清空旧文件
+				emptyFileContent(file);
+			} catch (IOException e) {
+				System.out.println("Failed to rename ["+fileName+"] to ["+checkedName+"].");
+			}
+		}
+		
 		long endTimeMillis = System.currentTimeMillis();
 		System.out.println(fileName + " 校验所用时长为：" + (endTimeMillis - startTimeMillis));
 	}
@@ -212,9 +233,9 @@ public class ChainFileChecker {
 			// 分割符
 			String columnsTitleSplit = filePojo.getColumnsTitleSplit();
 			// 获取上传时间
-			Calendar cd = Calendar.getInstance();
-			cd.setTimeInMillis(lastModified);
-			String uploadtime = DateFormat.getTimeInstance().format(cd.getTime());
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTimeInMillis(lastModified);
+			String uploadtime = DateFormat.getTimeInstance().format(calendar.getTime());
 
 			// 校验文件名
 			checkOutFlag = BaseUtil.isLegalFileName(filePojo, fileName);
@@ -288,7 +309,7 @@ public class ChainFileChecker {
 			for (int i = 0; i < core; i++) {
 				System.out.println("线程" + i + "准备就绪");
 
-				startRowNumber = 2 + i * blockSize;
+				startRowNumber = 3 + i * blockSize;
 				System.out.println("startRowNumber:" + startRowNumber);
 				if (i == (core - 1)) {
 					blockSize = row_count - startRowNumber + 1;
@@ -333,7 +354,7 @@ public class ChainFileChecker {
 					outputStream.write((ERROR_COLUMNS_TITLE + filePojo.getColumnsTitle()).getBytes());
 					outputStream.write(13);
 					outputStream.write(errorMsg.getBytes());
-					outputStream.write(13);
+					//outputStream.write(13);
 				}
 
 				// 遍历所有子线程创建的临时文件，按顺序把下载内容写入目标文件中
@@ -436,6 +457,7 @@ public class ChainFileChecker {
 			String rowValue;
 			String fieldValue;
 			FieldPojo fieldPojo;
+			RandomAccessFile randomAccessFile = null;
 
 			try {
 				start.await();
@@ -445,8 +467,7 @@ public class ChainFileChecker {
 
 				long readChars = BaseUtil.getFileAppointLinePointer(checkingFile.getAbsolutePath(), startRowNumber);
 
-				@SuppressWarnings("resource")
-				RandomAccessFile randomAccessFile = new RandomAccessFile(checkingFile, "rw");
+				randomAccessFile = new RandomAccessFile(checkingFile, "rw");
 				randomAccessFile.seek(readChars);
 				String[] fieldsArray;
 				// 数据集校验
@@ -584,6 +605,16 @@ public class ChainFileChecker {
 					}
 
 				}
+				
+				if( randomAccessFile !=null){
+					try {
+						randomAccessFile.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+						this.status = ChildThreadChecker.STATUS_HAS_EXCEPTION;
+						this.task.statusError = false;
+					}
+				}
 			}
 		}
 
@@ -603,6 +634,19 @@ public class ChainFileChecker {
 	public synchronized int errorCounter() {
 
 		return ChainFileChecker.this.errorCount++;
+	}
+	
+	/** 清空文件内容 */
+	public static void emptyFileContent(File file) {
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(file);
+			out.write(new byte[0]);
+		} catch (Exception e) {
+			System.out.println("Can't not empty " + file.getName());
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
 	}
 
 	public void setSRC_FILE_PATH(String sRC_FILE_PATH) {
