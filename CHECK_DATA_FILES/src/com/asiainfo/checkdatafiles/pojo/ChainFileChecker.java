@@ -1,4 +1,4 @@
-package com.asiainfo.checkdatafiles.beltline;
+package com.asiainfo.checkdatafiles.pojo;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -26,9 +26,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import com.alibaba.fastjson.JSON;
-import com.asiainfo.checkdatafiles.pojo.FieldPojo;
-import com.asiainfo.checkdatafiles.pojo.FilePojo;
-import com.asiainfo.checkdatafiles.test.NextMultiThreadDownLoad.ChildThread;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
 import com.asiainfo.checkdatafiles.util.FileCharsetDetector;
 import com.asiainfo.checkdatafiles.util.LineNumberConfigReader;
@@ -128,7 +125,7 @@ public class ChainFileChecker {
 	// 文件接口
 	private FilePojo filePojo;
 	// 当前校验文件
-	private File checkingFile;
+	//private File checkingFile;
 	// 字段实体
 	private FieldPojo[] fieldPojos;
 	// 错误计数器
@@ -178,13 +175,13 @@ public class ChainFileChecker {
 		//初始化参数
 		this.fileName = null;
 		this.filePojo = null;
-		this.checkingFile = null;
 		this.fieldPojos = null;
 		this.errorCount = 0;
 		this.lastModified = 0L;
 		this.core = 0;
 		this.statusError = false;
 		
+		File checkingFile = null;
 		// 第一步，过滤掉正在上传已校验以及正在校验的文件
 		if (!file.exists() || !file.isFile()) {
 			logger.info(file.getName() + " doesn't exist or is not a file");
@@ -204,7 +201,12 @@ public class ChainFileChecker {
 		
 		// 第二步，文件校验状态修改
 		this.lastModified = file.lastModified();
-		this.checkingFile = new File(file.getAbsolutePath() + ".checking");
+		checkingFile = new File(file.getAbsolutePath() + ".checking");
+		if(checkingFile.exists()){
+			checkingFile.delete();
+			checkingFile.createNewFile();
+		}
+		
 		file.renameTo(checkingFile);
 
 		// 第三步，获取接口抽象模板映射类,根据接口名称获得接口抽象模板
@@ -238,15 +240,21 @@ public class ChainFileChecker {
 		}
 
 		// 第五步，校验完毕，更改文件状态
-		String checkedName = SRC_FILE_PATH + fileName + ".checked";
+		//String checkedName = SRC_FILE_PATH + fileName + ".checked";
 
-		boolean renameTo = checkingFile.renameTo(new File(checkedName));
-
-		if (renameTo) {
-			System.out.println("重命名成功");
-		} else {
-			System.out.println("重命名失败");
+		while(true){
+			boolean renameTo = checkingFile.renameTo(new File(checkingFile.getAbsolutePath().replaceAll("checking", "checked")));
+			
+			if (renameTo) {
+				System.out.println("重命名成功");
+				break;
+			} else {
+				System.out.println("重命名失败,再次尝试");
+				Thread.sleep(3000);
+			}
+			
 		}
+
 
 		long endTimeMillis = System.currentTimeMillis();
 		System.out.println(fileName + " 校验所用时长为：" + (endTimeMillis - startTimeMillis));
@@ -366,7 +374,7 @@ public class ChainFileChecker {
 				if (i == (THREAD_NUM - 1)) {
 					blockSize = row_count - startRowNumber + 1;
 				}
-				ChildThreadChecker checker = new ChildThreadChecker(this, i, startRowNumber, blockSize, start, end);
+				ChildThreadChecker checker = new ChildThreadChecker(this,checkingFile, i, startRowNumber, blockSize, start, end);
 				childThreadChecker[i] = checker;
 				threadPoolExecutor.submit(checker);
 			}
@@ -457,13 +465,14 @@ public class ChainFileChecker {
 		public static final int STATUS_HAS_FINISHED = 1;
 		public static final int STATUS_HAS_EXCEPTION = 2;
 		private ChainFileChecker task;
-		private File tmpLogFile;
+		private File checkingFile;
 		private int id;
 		private Integer startRowNumber;
 		private Integer blockSize;
 		private CountDownLatch start;
 		private CountDownLatch end;
 
+		private File tmpLogFile;
 		private FileWriter writer;
 		// 线程状态码
 		private int status = ChildThreadChecker.STATUS_HASNOT_FINISHED;
@@ -472,10 +481,11 @@ public class ChainFileChecker {
 			super();
 		}
 
-		public ChildThreadChecker(ChainFileChecker chainFileChecker, int id, Integer startRowNumber, Integer blockSize,
+		public ChildThreadChecker(ChainFileChecker chainFileChecker,File checkingFile, int id, Integer startRowNumber, Integer blockSize,
 				CountDownLatch start, CountDownLatch end) {
 			super();
 			this.task = chainFileChecker;
+			this.checkingFile = checkingFile;
 			this.id = id;
 			this.startRowNumber = startRowNumber;
 			this.blockSize = blockSize;
@@ -634,7 +644,7 @@ public class ChainFileChecker {
 				writeLogMsg(writer, errorMsg);
 				
 				if (errorCount > 0) {
-					status = ChildThread.STATUS_HAS_ERROR;
+					status = ChildThreadChecker.STATUS_HAS_FINISHED;
 				}
 				end.countDown();
 			} catch (Exception e1) {

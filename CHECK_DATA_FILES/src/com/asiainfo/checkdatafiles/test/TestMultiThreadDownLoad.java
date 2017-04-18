@@ -15,7 +15,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
-import com.asiainfo.checkdatafiles.beltline.ChainFileChecker;
+import com.asiainfo.checkdatafiles.pojo.ChainFileChecker;
 import com.asiainfo.checkdatafiles.pojo.FieldPojo;
 import com.asiainfo.checkdatafiles.pojo.FilePojo;
 import com.asiainfo.checkdatafiles.util.BaseUtil;
@@ -147,6 +147,8 @@ public class TestMultiThreadDownLoad {
 		//BaseUtil.readAppointedLineNumber(reader, 8413340);
 		
 	}
+	
+	
 	@Test
 	public void testExecute1() throws Exception{
 		File files = new File("D:\\download\\file\\");
@@ -155,9 +157,10 @@ public class TestMultiThreadDownLoad {
 		for (File file : listFiles) {
 			instance = ChainFileChecker.getInstance();
 			instance.executeCheck(file);
-			instance = null;
 		}
 	}
+	
+	
 	@Ignore	
 	@Test
 	public void testExecute2() throws Exception{

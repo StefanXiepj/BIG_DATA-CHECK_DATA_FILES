@@ -38,20 +38,6 @@ import com.asiainfo.checkdatafiles.pojo.FilePojo;
  * @version 1.0
  */
 public class BaseUtil {
-	
-	
-	Map<String,Writer> logMp = new ConcurrentHashMap<String, Writer>();
-	public Map<String, Writer> getLogMp() {
-		return logMp;
-	}
-
-	public void setLogMp(Map<String, Writer> logMp) {
-		this.logMp = logMp;
-	}
-
-	public void writeLogFile(){
-		
-	}
 
 	// 校验文件名
 	public static String isLegalFileName(FilePojo filePojo, String fileName) {
@@ -254,6 +240,7 @@ public class BaseUtil {
 		is.close();
 		return count;
 	}
+	
 	// 获取到指定行的字符数
 	public static long getFileAppointLinePointer(String filename,int lineNumber) throws IOException {
 		InputStream is = new BufferedInputStream(new FileInputStream(filename));
