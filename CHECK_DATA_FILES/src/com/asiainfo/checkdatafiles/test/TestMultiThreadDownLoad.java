@@ -20,10 +20,31 @@ public class TestMultiThreadDownLoad {
 
 	@Test
 	public void testSplit() throws Exception{
-		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301003.txt.checking");
+/*		File checkingFile = new File("D:\\download\\file\\20000000012008330004BUS10151201305301003.txt.checking");
 		FileCharsetDetector fileCharsetDetector = new FileCharsetDetector();
 		String guessFileEncoding = fileCharsetDetector.guessFileEncoding(checkingFile, 2);
-		System.out.println(guessFileEncoding);
+		System.out.println(guessFileEncoding);*/
+		
+		ChainFileChecker instance = ChainFileChecker.getInstance();
+		
+		System.out.println(instance.getERROR_THRESHOLD());
+		System.out.println(instance.getERROR_LOG_PATH());
+		
+		
+
+			/*// 获取校验路径下所有文件集,并校验
+			File files = new File(SRC_FILE_PATH);
+			File[] listFiles = files.listFiles();
+
+			for (int i = 0; i < listFiles.length; i++) {
+				ChainFileChecker.getInstance().execute(listFiles[i]);
+			}
+
+			// Thread.sleep(1000*60*5);
+*/		
+		
+		
+		
 /*		Reader in = new FileReader(checkingFile);
 		LineNumberConfigReader reader = new LineNumberConfigReader(in );
 		reader.setLineNumber(11);

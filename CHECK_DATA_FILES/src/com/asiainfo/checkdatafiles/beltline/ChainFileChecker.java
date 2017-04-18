@@ -51,7 +51,7 @@ public class ChainFileChecker {
 	private static String ERROR_COLUMNS_TITLE;
 	private static Map<String, String> ERROR_CODE_MAP;
 	private static Map<String, FilePojo> FILE_POJO_MAP;
-	private static int ERROR_THRESHOLD;
+	private static String ERROR_THRESHOLD;
 
 	// 双锁单例模式
 	private ChainFileChecker() {
@@ -61,8 +61,31 @@ public class ChainFileChecker {
 		if (instance == null) {
 			synchronized (ChainFileChecker.class) {
 				if (instance == null) {
-					instance = new ChainFileChecker();
-					instance.statusError = true;
+					FileInputStream configIn = null;
+					try {
+						configIn = new FileInputStream("conf\\__init__.json");
+						byte[] buf = new byte[1024];
+						String initConfig = "";
+						int length = 0;
+						while ((length = configIn.read(buf)) != -1) {
+							initConfig += new String(buf, 0, length);
+						}
+
+						instance = JSON.parseObject(initConfig, ChainFileChecker.class);
+
+						FILE_POJO_MAP = new HashMap<String, FilePojo>();
+						List<FilePojo> filePojoList = FilePojo.getInstance();
+						for (FilePojo filePojo : filePojoList) {
+							FILE_POJO_MAP.put(filePojo.getInterfaceName(), filePojo);
+						}
+
+					} catch (JsonSyntaxException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} finally {
+						IOUtils.closeQuietly(configIn);
+					}
 				}
 			}
 		}
@@ -116,18 +139,6 @@ public class ChainFileChecker {
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-
-		// 获取校验路径下所有文件集,并校验
-		File files = new File(SRC_FILE_PATH);
-		File[] listFiles = files.listFiles();
-
-		for (int i = 0; i < listFiles.length; i++) {
-			ChainFileChecker.getInstance().execute(listFiles[i]);
-		}
-
-		// Thread.sleep(1000*60*5);
-	}
 
 	// 执行校验
 	public void execute(File file) throws Exception {
@@ -211,6 +222,7 @@ public class ChainFileChecker {
 		if(renameTo){System.out.println("重命名成功");}else{System.out.println("重命名失败");}
 		
 		long endTimeMillis = System.currentTimeMillis();
+		System.out.println("ERROR_THRESHOLD:"+ERROR_THRESHOLD);
 		System.out.println(fileName + " 校验所用时长为：" + (endTimeMillis - startTimeMillis));
 	}
 
@@ -579,7 +591,7 @@ public class ChainFileChecker {
 						errorMsg = "";
 					}
 
-					if (errorCount > ERROR_THRESHOLD) {
+					if (errorCount > 10000) {
 						break;
 					}
 
@@ -673,8 +685,30 @@ public class ChainFileChecker {
 		ChainFileChecker.FILE_POJO_MAP = fILE_POJO_MAP;
 	}
 	
-	public static void setERROR_THRESHOLD(int eRROR_THRESHOLD) {
+	public static void setERROR_THRESHOLD(String eRROR_THRESHOLD) {
 		ERROR_THRESHOLD = eRROR_THRESHOLD;
 	}
+
+	public static String getSRC_FILE_PATH() {
+		return SRC_FILE_PATH;
+	}
+
+	public static String getERROR_LOG_PATH() {
+		return ERROR_LOG_PATH;
+	}
+
+	public static String getERROR_COLUMNS_TITLE() {
+		return ERROR_COLUMNS_TITLE;
+	}
+
+	public static Map<String, String> getERROR_CODE_MAP() {
+		return ERROR_CODE_MAP;
+	}
+
+	public static String getERROR_THRESHOLD() {
+		return ERROR_THRESHOLD;
+	}
+	
+	
 
 }
