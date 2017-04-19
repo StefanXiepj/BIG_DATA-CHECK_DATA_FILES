@@ -213,7 +213,7 @@ public class BaseUtil {
 
 	// 获取指定行
 	public static String readAppointedLineNumber(LineNumberReader reader, int selectLineNumber) {
-		
+
 		reader.setLineNumber(selectLineNumber);
 		try {
 			return reader.readLine();
@@ -231,7 +231,6 @@ public class BaseUtil {
 		int readChars = 0;
 		while ((readChars = is.read(c)) != -1) {
 			for (int i = 0; i < readChars; ++i) {
-
 				if (c[i] == '\n')
 					++count;
 			}
@@ -240,9 +239,10 @@ public class BaseUtil {
 		is.close();
 		return count;
 	}
-	
+
 	// 获取到指定行的字符数
-	public static long getFileAppointLinePointer(String filename,int lineNumber) throws IOException {
+	public static long getFileAppointLinePointer(String filename, int lineNumber) throws IOException {
+
 		InputStream is = new BufferedInputStream(new FileInputStream(filename));
 		byte[] c = new byte[1024];
 		int count = 1;
@@ -250,17 +250,17 @@ public class BaseUtil {
 		long charsCount = 0L;
 		while ((readChars = is.read(c)) != -1) {
 			for (int i = 0; i < readChars; ++i) {
-				charsCount++;
-				if (c[i] == '\n')
-					++count;
-				if(count == lineNumber){
+				if (count == lineNumber) {
+					is.close();
 					return charsCount;
 				}
+				++charsCount;
+				if (c[i] == '\n')
+					++count;
 			}
 		}
-		
 		is.close();
-		return count;
+		return -1L;
 	}
 
 	// 按字节读取
