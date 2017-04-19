@@ -113,7 +113,7 @@ public class TestMultiThreadDownLoad {
 			}
 		}*/
 		long currentTimeMillis = System.currentTimeMillis();
-		String fileName = "D:\\download\\file\\20000000012008330004BUS10151201305301001.txt.checked";
+		String fileName = "D:\\download\\file\\20000000012008330004BUS10151201305300000.txt.checked";
 		int totalLines = 0;
 		try {
 			totalLines = BaseUtil.totalLines(fileName);
@@ -148,7 +148,7 @@ public class TestMultiThreadDownLoad {
 		
 	}
 	
-	
+	//@Ignore
 	@Test
 	public void testExecute1() throws Exception{
 		File files = new File("D:\\download\\file\\");
@@ -161,12 +161,21 @@ public class TestMultiThreadDownLoad {
 	}
 	
 	
-	@Ignore	
+	@Ignore
 	@Test
 	public void testExecute2() throws Exception{
-		List<FilePojo> listFilePojo = FilePojo.getInstance();
-		
-		FieldPojo[] fields = listFilePojo.get(0).getFields();
+		String fileName = "D:\\download\\file\\20000000012008330004BUS10151201305300000.txt.checked";
+		File checkingFile = new File(fileName);
+		long fileAppointLinePointer = BaseUtil.getFileAppointLinePointer(fileName, 3);
+		RandomAccessFile randomAccessFile = new RandomAccessFile(checkingFile, "rw");
+		randomAccessFile.seek(fileAppointLinePointer);
+		String read = randomAccessFile.readLine();
+		char[] charArray = read.toCharArray();
+		for (int i = 0; i < charArray.length; i++) {
+			int digit = Character.digit(charArray[i], 0);
+			System.out.println(digit);
+		}
+		randomAccessFile.close();
 	}
 	
 }

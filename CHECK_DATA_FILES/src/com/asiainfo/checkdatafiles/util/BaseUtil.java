@@ -260,7 +260,7 @@ public class BaseUtil {
 			}
 		}
 		is.close();
-		return -1L;
+		return charsCount;
 	}
 
 	// °´×Ö½Ú¶ÁÈ¡
